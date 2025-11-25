@@ -44,7 +44,7 @@ export type AuthContextType = {
   }) => ApiResult<any>;
 
   login: (credentials: { email: string; password: string }) => ApiResult<any>;
-  verifyEmail: (payload: { email: string; code?: string }) => ApiResult<any>;
+  verifyEmail: (payload: { email: string; otp?: string }) => ApiResult<any>;
   forgotPassword: (email: string) => ApiResult<any>;
   resetPassword: (payload: {
     token: string;
@@ -310,7 +310,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
    * Verify email (OTP)
    * POST /api/auth/verify-email
    */
-  const verifyEmail = async (payload: { email: string; code?: string }) => {
+  const verifyEmail = async (payload: { email: string; otp?: string }) => {
     try {
       const res = await api.post("/api/auth/verify-email", payload);
       return res.data;
