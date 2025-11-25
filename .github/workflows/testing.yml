@@ -55,7 +55,7 @@ jobs:
             #   uses: codecov/codecov-action@v3
             #   if
             - name: Upload coverage to Codecov
-              uses: actions/upload-artifact@v3
+              uses: actions/upload-artifact@v5
               if: always()
               with:
                   name: codecov-coverage
@@ -67,7 +67,7 @@ jobs:
             - uses: actions/checkout@v3
 
             - name: Setup Node.js
-              uses: actions/setup-node@v3
+              uses: actions/setup-node@v5
               with:
                   node-version: '18'
                   cache: 'npm'
@@ -83,7 +83,7 @@ jobs:
                   VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
 
             - name: Upload coverage to Codecov
-              uses: actions/upload-artifact@v3
+              uses: actions/upload-artifact@v5
               if: always()
               with:
                   name: codecov-coverage
@@ -110,7 +110,7 @@ jobs:
                   VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
 
             - name: Upload coverage to Codecov
-              uses: actions/upload-artifact@v3
+              uses: actions/upload-artifact@v5
               if: always()
               with:
                   name: codecov-coverage
@@ -137,9 +137,9 @@ jobs:
                   VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
             - name: Check build Output
               run: |
-                if [ -d build ]; then
+                if [ -d "build" ]; then
                   echo "Build successful!"
-                  ls -la build
+                  ls -la build/
                 else
                   echo "Build failed!"
                   exit 1
