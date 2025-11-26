@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from "react";
 import { Eye, EyeOff, BookOpen, Atom, DollarSign } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../../auth/AuthContext";
 
 export default function StudentSignUp() {
   const navigate = useNavigate();
