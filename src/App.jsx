@@ -32,7 +32,7 @@ import FAQs from "./pages/FAQs";
 
 export default function App() {
   return (
-    <Router>
+    
       <AuthProvider>
         <Routes>
           {/* Public Routes */}
@@ -82,6 +82,6 @@ export default function App() {
           />
         </Routes>
       </AuthProvider>
-    </Router>
+    
   );
 }
