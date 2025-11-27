@@ -25,13 +25,13 @@ const Toast = ({ message, type, onClose }) => {
   );
 };
 
-export default function Login() {
+export default function TutorLogin() {
   const navigate = useNavigate();
   const { login, loading } = useAuth();
 
   const [formData, setFormData] = useState({
     email: "",
-    password: ""
+    password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState(null);
@@ -65,16 +65,16 @@ export default function Login() {
   // Handle Input Changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ""
+        [name]: "",
       }));
     }
   };
@@ -82,7 +82,7 @@ export default function Login() {
   // Handle Login Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       showToast("Please fix the errors above", "error");
       return;
@@ -99,20 +99,22 @@ export default function Login() {
 
     try {
       console.log("📧 Email:", formData.email);
-      
+
       const response = await login({
         email: formData.email.trim(),
-        password: formData.password
+        password: formData.password,
       });
 
       console.log("✅ Login response:", response);
 
       // Check if user data indicates email is verified
-      const userData = response?.user || JSON.parse(localStorage.getItem('kynda_user') || '{}');
-      
+      const userData =
+        response?.user ||
+        JSON.parse(localStorage.getItem("kynda_user") || "{}");
+
       console.log("👤 User data:", userData);
       console.log("📧 Email verified:", userData.isEmailVerified);
-      
+
       // If email is already verified, proceed to dashboard
       if (userData.isEmailVerified) {
         showToast("Login successful! Redirecting...", "success");
@@ -125,11 +127,10 @@ export default function Login() {
         setVerificationEmail(formData.email);
         setShowVerificationModal(true);
       }
-      
     } catch (err) {
       console.error("❌ Login failed:", err);
-      
-      const errorMessage = 
+
+      const errorMessage =
         err?.message ||
         err?.response?.data?.message ||
         err?.response?.data?.detail ||
@@ -139,8 +140,10 @@ export default function Login() {
       console.error("Error message:", errorMessage);
 
       // Check if error is specifically about email verification
-      if (errorMessage.toLowerCase().includes("email not verified") || 
-          errorMessage.toLowerCase().includes("not verified")) {
+      if (
+        errorMessage.toLowerCase().includes("email not verified") ||
+        errorMessage.toLowerCase().includes("not verified")
+      ) {
         setVerificationEmail(formData.email);
         setShowVerificationModal(true);
         showToast("Please verify your email to continue", "error");
@@ -164,12 +167,12 @@ export default function Login() {
   // Handle successful verification
   const handleVerificationSuccess = async () => {
     showToast("Email verified! Logging you in...", "success");
-    
+
     // Update user data to mark email as verified
-    const userData = JSON.parse(localStorage.getItem('kynda_user') || '{}');
+    const userData = JSON.parse(localStorage.getItem("kynda_user") || "{}");
     userData.isEmailVerified = true;
-    localStorage.setItem('kynda_user', JSON.stringify(userData));
-    
+    localStorage.setItem("kynda_user", JSON.stringify(userData));
+
     setTimeout(() => {
       navigate("/dashboard");
     }, 1500);
@@ -254,10 +257,11 @@ export default function Login() {
             <div className="bg-white rounded-2xl shadow-xl p-8">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-gray-800 mb-2">
-                  Welcome Back to{" "}
-                  <span className="text-blue-600">Kynda!</span>
+                  Welcome Back to <span className="text-blue-600">Kynda!</span>
                 </h2>
-                <p className="text-gray-600">Login to your account to continue</p>
+                <p className="text-gray-600">
+                  Login to your account to continue
+                </p>
               </div>
 
               <form onSubmit={handleSubmit}>
@@ -311,7 +315,9 @@ export default function Login() {
                     </button>
                   </div>
                   {errors.password && (
-                    <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.password}
+                    </p>
                   )}
                 </div>
 
