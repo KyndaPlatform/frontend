@@ -1,5 +1,12 @@
 // src/auth/AuthContext.tsx
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import axios, { AxiosError, AxiosInstance } from "axios";
 
 /* ---------------------------
@@ -10,6 +17,7 @@ type User = {
   email?: string;
   fullName?: string;
   phoneNumber?: string;
+  isEmailVerified?: boolean;
   [key: string]: any;
 };
 
@@ -95,376 +103,465 @@ export const useAuth = (): AuthContextType => {
 type AuthProviderProps = { children: React.ReactNode };
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  // import.meta.env typing: cast to any if you don't have Vite types declared
   const API_BASE: string =
     ((import.meta as any).env?.VITE_API_BASE_URL as string) || "";
 
-  const [token, setToken] = useState<string | null>(
-    localStorage.getItem("kynda_token") || null
-  );
-  const [user, setUser] = useState<User | null>(() => {
-    const raw = localStorage.getItem("kynda_user");
-    return raw ? (JSON.parse(raw) as User) : null;
-  });
+  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
 
-  // Axios instance
-  const api: AxiosInstance = axios.create({
-    baseURL: API_BASE,
-    withCredentials: true,
-    headers: { "Content-Type": "application/json" },
-  });
+  // Optimized axios instance creation
+  const api: AxiosInstance = useMemo(() => {
+    const instance = axios.create({
+      baseURL: API_BASE,
+      withCredentials: true,
+      headers: { "Content-Type": "application/json" },
+      timeout: 10000, // 10 second timeout
+    });
 
-  // Attach token automatically from state/localStorage
-  api.interceptors.request.use(
-    (config) => {
-      const t = token ?? localStorage.getItem("kynda_token");
-      if (t && config && config.headers) {
-        config.headers.Authorization = `Bearer ${t}`;
-      }
-      return config;
-    },
-    (err) => Promise.reject(err)
-  );
+    // Add request interceptor
+    instance.interceptors.request.use(
+      (config) => {
+        const t = token ?? localStorage.getItem("kynda_token");
+        if (t && config.headers) {
+          config.headers.Authorization = `Bearer ${t}`;
+        }
+        return config;
+      },
+      (err) => Promise.reject(err)
+    );
+
+    return instance;
+  }, [API_BASE, token]);
 
   // Standardized error handler
-  const handleAxiosError = (err: unknown) => {
+  const handleAxiosError = useCallback((err: unknown) => {
     if (axios.isAxiosError(err)) {
       const ax = err as AxiosError;
-      return ax.response?.data ?? { message: ax.message };
-    }
-    return { message: "An unknown error occurred" };
-  };
-
-  // ---------------------------
-  // Student Auth
-  // ---------------------------
-
-  /**
-   * Signup - Page 1 (no token required)
-   * POST /api/students/signup/page1
-   */
-  // In your signUp function in AuthContext.tsx, add logging:
-  // In your AuthContext.tsx, update the signUp function:
-  // In your AuthContext.tsx, update the signUp function:
-
-  const signUp = async (data: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    password: string;
-    confirmPassword: string;
-    [key: string]: any;
-  }) => {
-    setLoading(true);
-    try {
-      console.log(
-        "🔄 Making API call to:",
-        `${API_BASE}/api/students/signup/page1`
-      );
-      console.log("📦 With data:", data);
-
-      const res = await api.post("/api/students/signup/page1", data);
-
-      console.log("✅ API Response status:", res.status);
-      console.log("✅ API Response data:", res.data);
-
-      const responseKeys = Object.keys(res.data);
-      console.log("🔑 Response keys:", responseKeys);
-      console.log("📋 Response values:", res.data);
-
-      responseKeys.forEach((key) => {
-        console.log(`   ${key}:`, res.data[key]);
+      console.error("API Error:", {
+        status: ax.response?.status,
+        data: ax.response?.data,
+        message: ax.message,
       });
 
-      const responseData = res.data;
+      // Return user-friendly error message
+      if (ax.response?.data) {
+        return ax.response.data;
+      }
+      return {
+        message:
+          ax.code === "ECONNABORTED"
+            ? "Request timeout. Please try again."
+            : "Network error. Please check your connection.",
+      };
+    }
+    return { message: "An unexpected error occurred" };
+  }, []);
 
-      // Save the studentId from the response
-      if (responseData.studentId) {
-        console.log("💾 Saving student ID:", responseData.studentId);
-        localStorage.setItem("kynda_student_id", responseData.studentId);
+  // Initialize auth state from localStorage
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        const storedToken = localStorage.getItem("kynda_token");
+        const storedUser = localStorage.getItem("kynda_user");
 
-        // Also set it in user state
-        setUser({
-          id: responseData.studentId,
-          email: data.email,
-          firstName: data.firstName,
-          lastName: data.lastName,
-        });
+        if (storedToken) {
+          setToken(storedToken);
+        }
 
-        localStorage.setItem(
-          "kynda_user",
-          JSON.stringify({
-            id: responseData.studentId,
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+        }
+      } catch (error) {
+        console.error("Error initializing auth:", error);
+        // Clear corrupted data
+        localStorage.removeItem("kynda_token");
+        localStorage.removeItem("kynda_user");
+      } finally {
+        setIsInitialized(true);
+      }
+    };
+
+    initializeAuth();
+  }, []);
+
+  // ---------------------------
+  // Student Auth - OPTIMIZED
+  // ---------------------------
+
+  const signUp = useCallback(
+    async (data: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone: string;
+      password: string;
+      confirmPassword: string;
+      [key: string]: any;
+    }) => {
+      setLoading(true);
+      try {
+        console.log("🔄 Making API call to signup");
+        const res = await api.post("/api/students/signup/page1", data);
+
+        console.log("✅ Signup response:", res.data);
+
+        // Save the studentId from the response
+        if (res.data.studentId) {
+          localStorage.setItem("kynda_student_id", res.data.studentId);
+
+          const userData = {
+            id: res.data.studentId,
             email: data.email,
             firstName: data.firstName,
             lastName: data.lastName,
-          })
-        );
+          };
+
+          setUser(userData);
+          localStorage.setItem("kynda_user", JSON.stringify(userData));
+        }
+
+        return res.data;
+      } catch (err: unknown) {
+        console.error("❌ Signup error:", err);
+        throw handleAxiosError(err);
+      } finally {
+        setLoading(false);
       }
+    },
+    [api, handleAxiosError]
+  );
 
-      return responseData;
-    } catch (err: unknown) {
-      console.error("❌ API Error:", err);
-      throw handleAxiosError(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-  /**
-   * Signup - Page 2 (token required)
-   * POST /api/students/signup/page2
-   * Backend expects Authorization: Bearer <token>
-   */
-  const signupPage2 = async (data: Record<string, any>) => {
-    setLoading(true);
-    try {
-      console.log(
-        "🚀 Submitting enrollment data to /api/students/signup/page2"
-      );
-      console.log("📦 Full enrollment data being sent:", data);
-
-      // Log the exact request we're making
-      console.log("🔍 Request details:", {
-        url: `${API_BASE}/api/students/signup/page2`,
-        method: "POST",
-        data: data,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("kynda_token")}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      const res = await api.post("/api/students/signup/page2", data, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("kynda_token")}`,
-        },
-      });
-
-      console.log("✅ Enrollment response:", res.data);
-      return res.data;
-    } catch (err: unknown) {
-      console.error("❌ Enrollment error details:");
-      if (axios.isAxiosError(err)) {
-        console.error("Status:", err.response?.status);
-        console.error("Error data:", err.response?.data);
-        console.error("Error message:", err.message);
+  const signupPage2 = useCallback(
+    async (data: Record<string, any>) => {
+      setLoading(true);
+      try {
+        console.log("🚀 Submitting enrollment data");
+        const res = await api.post("/api/students/signup/page2", data);
+        console.log("✅ Enrollment response:", res.data);
+        return res.data;
+      } catch (err: unknown) {
+        console.error("❌ Enrollment error:", err);
+        throw handleAxiosError(err);
+      } finally {
+        setLoading(false);
       }
-      throw handleAxiosError(err);
-    } finally {
-      setLoading(false);
-    }
-  }; // Add this to your AuthContext in AuthContext.tsx
+    },
+    [api, handleAxiosError]
+  );
+
+  const submitEnrollment = useCallback(
+    async (data: Record<string, any>) => {
+      setLoading(true);
+      try {
+        const res = await api.post("/api/students/signup/page2", data);
+        return res.data;
+      } catch (err: unknown) {
+        throw handleAxiosError(err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [api, handleAxiosError]
+  );
 
   /**
-   * Submit enrollment (signup page 2)
-   * POST /api/students/signup/page2
+   * Login - OPTIMIZED with better error handling
    */
-  const submitEnrollment = async (data: Record<string, any>) => {
-    setLoading(true);
-    try {
-      const res = await api.post("/api/students/signup/page2", data, {
-        headers: {
-          Authorization: token
-            ? `Bearer ${token}`
-            : `Bearer ${localStorage.getItem("kynda_token")}`,
-        },
-      });
-      return res.data;
-    } catch (err: unknown) {
-      throw handleAxiosError(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const login = useCallback(
+    async (credentials: { email: string; password: string }) => {
+      setLoading(true);
+      try {
+        console.log("🔐 Attempting login...");
 
-  /**
-   * Login
-   * POST /api/auth/login
-   */
-  const login = async (credentials: { email: string; password: string }) => {
-    setLoading(true);
-    try {
-      const res = await api.post("/api/auth/login", credentials);
-      const rToken = res.data?.token ?? null;
-      const rUser = res.data?.user ?? null;
+        const res = await api.post("/api/auth/login", credentials);
+        console.log("✅ Login response received:", res.data);
 
-      if (rToken) {
+        const responseData = res.data;
+        const rToken =
+          responseData?.token ||
+          responseData?.access_token ||
+          responseData?.data?.token;
+        const rUser = responseData?.user || responseData?.data?.user;
+
+        if (!rToken) {
+          console.error("❌ No token in response:", responseData);
+          throw new Error("Authentication failed: No token received");
+        }
+
+        if (!rUser) {
+          console.error("❌ No user data in response:", responseData);
+          throw new Error("Authentication failed: No user data received");
+        }
+
+        // Set auth state
         setToken(rToken);
-        localStorage.setItem("kynda_token", rToken);
-      }
-      if (rUser) {
         setUser(rUser);
+
+        // Store in localStorage
+        localStorage.setItem("kynda_token", rToken);
         localStorage.setItem("kynda_user", JSON.stringify(rUser));
+
+        console.log("✅ Login successful, user:", rUser);
+        return responseData;
+      } catch (err: unknown) {
+        console.error("❌ Login failed:", err);
+
+        // Clear any potentially corrupted state
+        setToken(null);
+        setUser(null);
+        localStorage.removeItem("kynda_token");
+        localStorage.removeItem("kynda_user");
+
+        throw handleAxiosError(err);
+      } finally {
+        setLoading(false);
       }
-      return res.data;
-    } catch (err: unknown) {
-      throw handleAxiosError(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [api, handleAxiosError]
+  );
 
   /**
    * Verify email (OTP)
-   * POST /api/auth/verify-email
    */
-  const verifyEmail = async (payload: { email: string; code?: string }) => {
-    try {
-      const res = await api.post("/api/auth/verify-email", payload);
-      return res.data;
-    } catch (err: unknown) {
-      throw handleAxiosError(err);
-    }
-  };
+  const verifyEmail = useCallback(
+    async (payload: { email: string; code?: string }) => {
+      try {
+        const res = await api.post("/api/auth/verify-email", payload);
+        return res.data;
+      } catch (err: unknown) {
+        throw handleAxiosError(err);
+      }
+    },
+    [api, handleAxiosError]
+  );
 
   /**
    * Forgot password
-   * POST /api/auth/forgot-password
    */
-  const forgotPassword = async (email: string) => {
-    try {
-      const res = await api.post("/api/auth/forgot-password", { email });
-      return res.data;
-    } catch (err: unknown) {
-      throw handleAxiosError(err);
-    }
-  };
+  const forgotPassword = useCallback(
+    async (email: string) => {
+      try {
+        const res = await api.post("/api/auth/forgot-password", { email });
+        return res.data;
+      } catch (err: unknown) {
+        throw handleAxiosError(err);
+      }
+    },
+    [api, handleAxiosError]
+  );
 
   /**
    * Reset password
-   * POST /api/auth/reset-password
    */
-  const resetPassword = async (payload: {
-    token: string;
-    password: string;
-  }) => {
-    try {
-      const res = await api.post("/api/auth/reset-password", payload);
-      return res.data;
-    } catch (err: unknown) {
-      throw handleAxiosError(err);
-    }
-  };
+  const resetPassword = useCallback(
+    async (payload: { token: string; password: string }) => {
+      try {
+        const res = await api.post("/api/auth/reset-password", payload);
+        return res.data;
+      } catch (err: unknown) {
+        throw handleAxiosError(err);
+      }
+    },
+    [api, handleAxiosError]
+  );
 
   // ---------------------------
-  // Student Actions
+  // Student Actions - OPTIMIZED
   // ---------------------------
 
-  const bookSection = (data: Record<string, any>) =>
-    api.post("/api/students/book-section", data);
-  const comment = (data: Record<string, any>) =>
-    api.post("/api/students/comment", data);
-  const studentDashboard = () => api.get("/api/students/dashboard");
-  const getStudentProfile = (id: string) =>
-    api.get(`/api/students/profile/${id}`);
-  const updatePassword = (
-    id: string,
-    data: { oldPassword: string; newPassword: string }
-  ) => api.put(`/api/students/change-password/${id}`, data);
-  const getNotifications = (id: string) =>
-    api.get(`/api/students/notifications/${id}`);
-  const getCourses = () => api.get("/api/students/get-courses");
-  const getLesson = (lessonId: string) =>
-    api.get(`/api/students/lesson/${lessonId}`);
-  const bookClass = (data: Record<string, any>) =>
-    api.post("/api/students/book-class", data);
+  const bookSection = useCallback(
+    (data: Record<string, any>) => api.post("/api/students/book-section", data),
+    [api]
+  );
+
+  const comment = useCallback(
+    (data: Record<string, any>) => api.post("/api/students/comment", data),
+    [api]
+  );
+
+  const studentDashboard = useCallback(
+    () => api.get("/api/students/dashboard"),
+    [api]
+  );
+
+  const getStudentProfile = useCallback(
+    (id: string) => api.get(`/api/students/profile/${id}`),
+    [api]
+  );
+
+  const updatePassword = useCallback(
+    (id: string, data: { oldPassword: string; newPassword: string }) =>
+      api.put(`/api/students/change-password/${id}`, data),
+    [api]
+  );
+
+  const getNotifications = useCallback(
+    (id: string) => api.get(`/api/students/notifications/${id}`),
+    [api]
+  );
+
+  const getCourses = useCallback(
+    () => api.get("/api/students/get-courses"),
+    [api]
+  );
+
+  const getLesson = useCallback(
+    (lessonId: string) => api.get(`/api/students/lesson/${lessonId}`),
+    [api]
+  );
+
+  const bookClass = useCallback(
+    (data: Record<string, any>) => api.post("/api/students/book-class", data),
+    [api]
+  );
 
   // ---------------------------
-  // Tutor Auth & Flows
+  // Tutor Auth & Flows - OPTIMIZED
   // ---------------------------
 
-  const tutorSignup = (data: Record<string, any>) =>
-    api.post("/api/auth/tutor-signup", data);
-  const tutorEmailVerifyCode = (data: Record<string, any>) =>
-    api.post("/api/auth/tutor-email-verify-code", data);
-  const tutorVerifyEmail = (data: Record<string, any>) =>
-    api.post("/api/auth/tutor-verify-email", data);
-  const tutorPhoneVerifyCode = (data: Record<string, any>) =>
-    api.post("/api/auth/tutor-phone-verify-code", data);
-  const tutorVerifyPhone = (data: Record<string, any>) =>
-    api.post("/api/auth/tutor-verify-phone", data);
+  const tutorSignup = useCallback(
+    (data: Record<string, any>) => api.post("/api/auth/tutor-signup", data),
+    [api]
+  );
 
-  const tutorUploadDocuments = (form: FormData) =>
-    api.post("/api/auth/tutor-upload-documents", form, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+  const tutorEmailVerifyCode = useCallback(
+    (data: Record<string, any>) =>
+      api.post("/api/auth/tutor-email-verify-code", data),
+    [api]
+  );
 
-  const tutorQualifications = (data: Record<string, any>) =>
-    api.post("/api/auth/tutor-qualifications", data, {
-      headers: {
-        Authorization: token
-          ? `Bearer ${token}`
-          : `Bearer ${localStorage.getItem("kynda_token")}`,
-      },
-    });
+  const tutorVerifyEmail = useCallback(
+    (data: Record<string, any>) =>
+      api.post("/api/auth/tutor-verify-email", data),
+    [api]
+  );
 
-  const tutorVerifyDocuments = (data: Record<string, any>) =>
-    api.post("/api/auth/tutor-verify-documents", data, {
-      headers: {
-        Authorization: token
-          ? `Bearer ${token}`
-          : `Bearer ${localStorage.getItem("kynda_token")}`,
-      },
-    });
+  const tutorPhoneVerifyCode = useCallback(
+    (data: Record<string, any>) =>
+      api.post("/api/auth/tutor-phone-verify-code", data),
+    [api]
+  );
+
+  const tutorVerifyPhone = useCallback(
+    (data: Record<string, any>) =>
+      api.post("/api/auth/tutor-verify-phone", data),
+    [api]
+  );
+
+  const tutorUploadDocuments = useCallback(
+    (form: FormData) =>
+      api.post("/api/auth/tutor-upload-documents", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      }),
+    [api]
+  );
+
+  const tutorQualifications = useCallback(
+    (data: Record<string, any>) =>
+      api.post("/api/auth/tutor-qualifications", data),
+    [api]
+  );
+
+  const tutorVerifyDocuments = useCallback(
+    (data: Record<string, any>) =>
+      api.post("/api/auth/tutor-verify-documents", data),
+    [api]
+  );
 
   // ---------------------------
   // Logout
   // ---------------------------
-  const logout = () => {
+  const logout = useCallback(() => {
+    console.log("🚪 Logging out...");
     setToken(null);
     setUser(null);
     localStorage.removeItem("kynda_token");
     localStorage.removeItem("kynda_user");
-  };
-
-  // Hydrate token on mount
-  useEffect(() => {
-    const stored = localStorage.getItem("kynda_token");
-    if (stored) setToken(stored);
-
-    // optional: hydrate user profile from server if endpoint exists
-    // if (stored) {
-    //   api.get('/api/students/profile/me').then(r => setUser(r.data)).catch(() => {});
-    // }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    localStorage.removeItem("kynda_student_id");
   }, []);
 
-  const value: AuthContextType = {
-    user,
-    token,
-    loading,
+  // Memoized context value to prevent unnecessary re-renders
+  const value: AuthContextType = useMemo(
+    () => ({
+      user,
+      token,
+      loading: loading || !isInitialized, // Show loading until initialized
 
-    signUp,
-    signupPage2,
-    submitEnrollment,
-    login,
-    verifyEmail,
-    forgotPassword,
-    resetPassword,
+      signUp,
+      signupPage2,
+      submitEnrollment,
+      login,
+      verifyEmail,
+      forgotPassword,
+      resetPassword,
 
-    bookSection,
-    comment,
-    studentDashboard,
-    getStudentProfile,
-    updatePassword,
-    getNotifications,
-    getCourses,
-    getLesson,
-    bookClass,
+      bookSection,
+      comment,
+      studentDashboard,
+      getStudentProfile,
+      updatePassword,
+      getNotifications,
+      getCourses,
+      getLesson,
+      bookClass,
 
-    tutorSignup,
-    tutorEmailVerifyCode,
-    tutorVerifyEmail,
-    tutorPhoneVerifyCode,
-    tutorVerifyPhone,
-    tutorUploadDocuments,
-    tutorQualifications,
-    tutorVerifyDocuments,
+      tutorSignup,
+      tutorEmailVerifyCode,
+      tutorVerifyEmail,
+      tutorPhoneVerifyCode,
+      tutorVerifyPhone,
+      tutorUploadDocuments,
+      tutorQualifications,
+      tutorVerifyDocuments,
 
-    logout,
-  };
+      logout,
+    }),
+    [
+      user,
+      token,
+      loading,
+      isInitialized,
+      signUp,
+      signupPage2,
+      submitEnrollment,
+      login,
+      verifyEmail,
+      forgotPassword,
+      resetPassword,
+      bookSection,
+      comment,
+      studentDashboard,
+      getStudentProfile,
+      updatePassword,
+      getNotifications,
+      getCourses,
+      getLesson,
+      bookClass,
+      tutorSignup,
+      tutorEmailVerifyCode,
+      tutorVerifyEmail,
+      tutorPhoneVerifyCode,
+      tutorVerifyPhone,
+      tutorUploadDocuments,
+      tutorQualifications,
+      tutorVerifyDocuments,
+      logout,
+    ]
+  );
+
+  // Show loading until auth is initialized
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -6,7 +6,7 @@ import EmailVerificationModal from "./EmailVerificationModal";
 
 export default function EnrollmentDetails1() {
   const navigate = useNavigate();
-  const { submitEnrollment, signupPage2, loading, user } = useAuth();
+  const { submitEnrollment, signupPage2, loading, user, verifyEmail } = useAuth();
 
   const [formData, setFormData] = useState({
     schoolLevel: "",
@@ -78,18 +78,20 @@ export default function EnrollmentDetails1() {
         struggles: formData.struggles,
       };
 
-      console.log("📦 Enrollment data:", enrollmentData);
-
       // Submit enrollment
       const result = await signupPage2(enrollmentData);
       console.log("✅ Enrollment successful:", result);
       
-      // Close success modal and open verification modal
+      // ✨ Send verification code to email
+      console.log("📧 Sending verification code to:", userEmail);
+      await verifyEmail({ email: userEmail });
+      
+      // Then show the verification modal
       setShowSuccessModal(false);
       setShowVerificationModal(true);
       
     } catch (error) {
-      console.error("❌ Error saving enrollment:", error);
+      console.error("❌ Error:", error);
       setApiError(error?.message || "Something went wrong. Please try again.");
     }
   };

@@ -4,9 +4,9 @@ import { AuthProvider } from "./auth/AuthContext";
 import Onboarding from "./pages/Onboarding";
 import ConnectWallet from "./pages/ConnectWallet";
 import ConnectAccount from "./pages/ConnectAccount";
-import StudentSignUp from "./pages/StudentSignUp";
+import StudentSignUp from "./pages/Student/StudentSignUp";
 import TutorSignUp from "./pages/Tutor/TutorSignUp";
-import Login from "./pages/Login";
+import Login from "./pages/Student/Login";
 import EnrollmentDetails1 from "./pages/EnrollmentDetails1";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home";
@@ -15,7 +15,7 @@ import Features from "./pages/Features";
 import AboutUs from "./pages/AboutUs";
 import ContactUs from "./pages/ContactUs";
 import TeachOnKynda from "./pages/TeachOnKynda";
-import DashBoard from "./pages/DashBoard";
+import DashBoard from "./pages/Student/DashBoard";
 import TutorLogin from "./pages/Tutor/TutorLogin";
 import TutorDashboard from "./pages/Tutor/TutorDashboard";
 import ForgetPassword from "./pages/ForgetPassword";
@@ -28,6 +28,7 @@ import ContractTerms from "./pages/ContractTerms";
 import TutorPolicy from "./pages/Tutor/TutorPolicy"
 import TutorResources from "./pages/Tutor/TutorResources"
 import EmailVerificationModal from "./pages/EmailVerificationModal";
+import FAQs from "./pages/FAQs";  
 
 export default function App() {
   return (
@@ -42,9 +43,9 @@ export default function App() {
           <Route path="/student-signup" element={<StudentSignUp />} />
           <Route path="/tutor-signup" element={<TutorSignUp />} />
           <Route path="/tutor-login" element={<TutorLogin />} />
-          <Route path="/about-us" element={<AboutUs />} />
+          <Route path="/about" element={<AboutUs />} />
           <Route path="/features" element={<Features />} />
-          <Route path="/howitworks" element={<HowItWorks />} />
+          <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path='/contact' element={<ContactUs />} />
           <Route path='/teach-on-kynda' element={<TeachOnKynda />} />
           <Route path="/enrollment-details1" element={<EnrollmentDetails1 />}/>
@@ -58,6 +59,7 @@ export default function App() {
           <Route path="/tutor-policy" element={<TutorPolicy />}/>
           <Route path="/tutor-resources" element={<TutorResources />}/>
           <Route path="/verify-email" element={<EmailVerificationModal />} />
+          <Route path='/faqs' element={<FAQs />} />
           
           {/* Protected Routes - Require Authentication */}
           

@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Eye, EyeOff, CheckCircle, XCircle } from "lucide-react";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
-import EmailVerificationModal from "./EmailVerificationModal";
+import EmailVerificationModal from "../EmailVerificationModal";
 
 // Toast Component
 const Toast = ({ message, type, onClose }) => {

@@ -64,7 +64,7 @@ export default function Home() {
 
   // Educational Bodies (with placeholder images)
   const educationalBodies = [
-    { name: 'WAEC', logo: '../images/image 40.png' },
+  { name: 'WAEC', logo: '../images/image 40.png' },
     { name: 'NECO', logo: '../images/image 41.png' },
     { name: 'JAMB', logo: '../images/image 42.png' },
     { name: 'NOUN', logo: '../images/image 43.png' },
@@ -74,37 +74,37 @@ export default function Home() {
     { name: 'UNESCO', logo: '../images/image 47.png' }
   ];
 
-  // Learning Categories with images
+  // Learning Categories with images and colors
   const categories = [
-    { 
+        { 
       name: 'English', 
-      image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=200&h=200&fit=crop',
-      color: 'from-yellow-400 to-orange-500'
+      image: '../images/img (6).png',
+      
     },
     { 
       name: 'Mathematics', 
-      image: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=200&h=200&fit=crop',
-      color: 'from-red-500 to-pink-600'
+      image: '../images/img (5).png',
+      
     },
     { 
       name: 'Social Science', 
-      image: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=200&h=200&fit=crop',
-      color: 'from-green-400 to-emerald-500'
+      image: '../images/img.png',
+      
     },
     { 
       name: 'Sciences', 
-      image: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=200&h=200&fit=crop',
-      color: 'from-blue-400 to-indigo-500'
+      image: '../images/img (1).png',
+      
     },
     { 
       name: 'Arts', 
-      image: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=200&h=200&fit=crop',
-      color: 'from-teal-400 to-cyan-500'
+      image: '../images/img (3).png',
+      
     },
     { 
       name: 'Junior Subjects', 
-      image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=200&h=200&fit=crop',
-      color: 'from-purple-400 to-pink-500'
+      image: '../images/img (4).png',
+      
     }
   ];
 
@@ -206,6 +206,20 @@ export default function Home() {
     }
   ];
 
+  // Dashboard preview images
+  const dashboardPreviews = [
+    {
+      title: "Parent's Dashboard",
+      desc: "Parents manage child profiles, approve lessons, monitor progress, and control spending with ease.",
+      image: "../images/image 50.png" 
+    },
+    {
+      title: "Tutor's Dashboard", 
+      desc: "Tutors track earnings, manage sessions, view student feedback, and set availability — all in one place.",
+      image: "../images/image 39.png"
+    }
+  ];
+
   function CategoryCard({ name, image, color, delay }) {
     return (
       <FadeInView delay={delay} direction="up">
@@ -215,12 +229,39 @@ export default function Home() {
             <img
               src={image}
               alt={name}
-              className="w-24 h-24 object-cover rounded-lg transform group-hover:scale-110 transition-transform duration-300"
+              className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-300"
             />
           </div>
           <h3 className="text-xl font-semibold text-gray-900 text-center group-hover:text-cyan-600 transition-colors">
             {name}
           </h3>
+        </div>
+      </FadeInView>
+    );
+  }
+
+  function DashboardPreview({ title, desc, color, image, delay, direction }) {
+    return (
+      <FadeInView delay={delay} direction={direction}>
+        <div className="bg-white rounded-xl shadow-xl overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl group">
+          <div className={`h-80 bg-gradient-to-br ${color} flex items-center justify-center p-6 relative overflow-hidden`}>
+            <div className="shimmer absolute inset-0"></div>
+            {image ? (
+              <img
+                src={image}
+                alt={title}
+                className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
+              />
+            ) : (
+              <div className="bg-white rounded-lg shadow-lg p-6 w-full h-full flex items-center justify-center">
+                <span className="text-sm text-gray-400">{title} Preview</span>
+              </div>
+            )}
+          </div>
+          <div className="p-8 text-center">
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">{title}</h3>
+            <p className="text-gray-600">{desc}</p>
+          </div>
         </div>
       </FadeInView>
     );
@@ -272,7 +313,7 @@ export default function Home() {
                   Learning and Trusted Tutors.
                 </h1>
                 <p className="text-lg text-gray-600 mb-8 animate-pulse-slow">
-                  Short lessons (30–120 mins) designed for exam success & homework help starting at just ₦500.
+                  Short lessons (30–120 mins) designed for exam success & homework help starting at just ₦1000.
                 </p>
                 <div className="flex flex-wrap gap-4">
                   <button className="bg-indigo-900 text-white px-8 py-3 rounded-lg hover:bg-indigo-800 transition-all duration-300 font-semibold transform hover:scale-105 hover:shadow-xl">
@@ -291,7 +332,7 @@ export default function Home() {
                 <div className="relative">
                   <div className="rounded-2xl p-8 min-h-[500px] flex items-center justify-center">
                     <img
-                      src="../images/boy (1).png"
+                      src="/images/boy (1).png"
                       alt="Student learning"
                       className="rounded-2xl shadow-2xl w-full h-full object-cover"
                     />
@@ -316,7 +357,7 @@ export default function Home() {
                     <img
                       src={body.logo}
                       alt={body.name}
-                      className="w-20 h-20 rounded-full shadow-lg group-hover:shadow-2xl transition-shadow duration-300"
+                      className="w-20 h-20 rounded-full shadow-lg group-hover:shadow-2xl transition-shadow duration-300 object-cover"
                     />
                   </div>
                 </FadeInView>
@@ -417,24 +458,15 @@ export default function Home() {
           </FadeInView>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {[
-              { title: "Parent's Dashboard", desc: "Parents manage child profiles, approve lessons, monitor progress, and control spending with ease.", color: "from-indigo-50 to-blue-50" },
-              { title: "Tutor's Dashboard", desc: "Tutors track earnings, manage sessions, view student feedback, and set availability — all in one place.", color: "from-green-50 to-emerald-50" }
-            ].map((dashboard, index) => (
-              <FadeInView key={index} delay={index * 200} direction={index === 0 ? 'left' : 'right'}>
-                <div className="bg-white rounded-xl shadow-xl overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl group">
-                  <div className={`h-80 bg-gradient-to-br ${dashboard.color} flex items-center justify-center p-6 relative overflow-hidden`}>
-                    <div className="shimmer absolute inset-0"></div>
-                    <div className="bg-white rounded-lg shadow-lg p-6 w-full h-full flex items-center justify-center transform group-hover:scale-105 transition-transform duration-300">
-                      <span className="text-sm text-gray-400">{dashboard.title} Preview</span>
-                    </div>
-                  </div>
-                  <div className="p-8 text-center">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3">{dashboard.title}</h3>
-                    <p className="text-gray-600">{dashboard.desc}</p>
-                  </div>
-                </div>
-              </FadeInView>
+            {dashboardPreviews.map((dashboard, index) => (
+              <DashboardPreview
+                key={index}
+                title={dashboard.title}
+                desc={dashboard.desc}
+                image={dashboard.image}
+                delay={index * 200}
+                direction={index === 0 ? 'left' : 'right'}
+              />
             ))}
           </div>
         </div>
@@ -487,8 +519,12 @@ export default function Home() {
               </div>
               <FloatingElement delay={0.5}>
                 <div className="bg-white rounded-xl p-4 shadow-2xl">
-                  <div className="w-80 h-64 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex items-center justify-center">
-                    <span className="text-gray-400">Calendar Interface</span>
+                  <div className="w-80 h-100 rounded-lg flex items-center justify-center relative overflow-hidden">
+                    <img
+                      src="../images/all.jpeg"
+                      alt="Student"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 </div>
               </FloatingElement>
@@ -612,7 +648,7 @@ export default function Home() {
                     "{testimonial.text}"
                   </p>
                   <div className="flex items-center gap-3">
-                    <img src={testimonial.image} alt={testimonial.name} className="w-12 h-12 rounded-full" />
+                    <img src={testimonial.image} alt={testimonial.name} className="w-12 h-12 rounded-full object-cover" />
                     <div>
                       <div className="font-semibold text-gray-900">{testimonial.name}</div>
                       <div className="text-sm text-gray-500">{testimonial.role}</div>
@@ -683,10 +719,10 @@ export default function Home() {
 
       {/* Final CTA Section */}
       <section className="relative py-20 px-4 text-white overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 via-blue-800 to-cyan-600 opacity-95"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 via-black to-black-600 opacity-95"></div>
         <div className="absolute inset-0">
           <img 
-            src="../images/girls.png" 
+            src="/images/girls.png" 
             alt="Students learning"
             className="w-full h-full object-cover opacity-20"
           />

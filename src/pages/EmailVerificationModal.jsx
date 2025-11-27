@@ -1,322 +1,356 @@
-// EmailVerificationModal.jsx
-import React, { useState, useEffect, useRef } from "react";
-import { Mail, CheckCircle, XCircle, Clock, X } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { ChevronLeft, ChevronRight, MapPin, CheckCircle, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import EmailVerificationModal from "./EmailVerificationModal";
 
-// Toast Component
-const Toast = ({ message, type, onClose }) => {
+export default function EnrollmentDetails1() {
+  const navigate = useNavigate();
+  const { submitEnrollment, signupPage2, loading, user, verifyEmail } = useAuth();
+
+  const [formData, setFormData] = useState({
+    schoolLevel: "",
+    age: "",
+    subjects: "",
+    lessonType: "",
+    location: "",
+    struggles: "",
+  });
+
+  const [studentId, setStudentId] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [showSchoolDropdown, setShowSchoolDropdown] = useState(false);
+  const [showLessonDropdown, setShowLessonDropdown] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [apiError, setApiError] = useState("");
+
+  // Get student ID and email from localStorage on component mount
   useEffect(() => {
-    const timer = setTimeout(onClose, 4000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  return (
-    <div className="fixed top-4 right-4 z-60 animate-slide-in">
-      <div
-        className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
-          type === "success" ? "bg-green-500" : type === "error" ? "bg-red-500" : "bg-blue-500"
-        } text-white`}
-      >
-        {type === "success" ? (
-          <CheckCircle size={20} />
-        ) : type === "error" ? (
-          <XCircle size={20} />
-        ) : (
-          <Clock size={20} />
-        )}
-        <span className="font-medium">{message}</span>
-      </div>
-    </div>
-  );
-};
-
-export default function EmailVerificationModal({ isOpen, onClose, email, onSuccess }) {
-  const { verifyEmail } = useAuth();
-  
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [toast, setToast] = useState(null);
-  const [error, setError] = useState("");
-  const [resendTimer, setResendTimer] = useState(60);
-  const [canResend, setCanResend] = useState(false);
-
-  const inputRefs = useRef([]);
-
-  // Timer for resend button
-  useEffect(() => {
-    if (isOpen && resendTimer > 0) {
-      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
-      return () => clearTimeout(timer);
-    } else if (resendTimer === 0) {
-      setCanResend(true);
-    }
-  }, [resendTimer, isOpen]);
-
-  // Reset state when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setOtp(["", "", "", "", "", ""]);
-      setError("");
-      setResendTimer(60);
-      setCanResend(false);
-      setTimeout(() => inputRefs.current[0]?.focus(), 100);
-    }
-  }, [isOpen]);
-
-  const showToast = (message, type) => {
-    setToast({ message, type });
-  };
-
-  // Handle OTP input change
-  const handleChange = (index, value) => {
-    if (value && !/^\d+$/.test(value)) return;
-
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-    setError("");
-
-    if (value && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-
-    if (newOtp.every(digit => digit !== "") && newOtp.join("").length === 6) {
-      handleVerify(newOtp.join(""));
-    }
-  };
-
-  const handleKeyDown = (index, e) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handlePaste = (e) => {
-    e.preventDefault();
-    const pastedData = e.clipboardData.getData("text").slice(0, 6);
+    const signupData = localStorage.getItem('kynda_signup_data');
     
-    if (!/^\d+$/.test(pastedData)) {
-      showToast("Please paste numbers only", "error");
-      return;
+    if (signupData) {
+      const parsedData = JSON.parse(signupData);
+      console.log("📥 Enrollment page - Signup data:", parsedData);
+      setStudentId(parsedData.studentId);
+      setUserEmail(parsedData.email || user?.email || "");
+    } else {
+      console.warn("No signup data found, redirecting to signup");
+      navigate("/signup");
     }
+  }, [navigate, user]);
 
-    const newOtp = pastedData.split("");
-    while (newOtp.length < 6) newOtp.push("");
-    setOtp(newOtp);
+  const schoolLevels = ["Primary", "Secondary", "Exam Prep", "Tertiary"];
+  const lessonTypes = ["Quick Help", "Structured Tutoring", "Exam Prep"];
 
-    if (pastedData.length === 6) {
-      handleVerify(pastedData);
-    }
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.schoolLevel) newErrors.schoolLevel = "School level is required";
+    if (!formData.age) newErrors.age = "Age is required";
+    else if (parseInt(formData.age) < 16) newErrors.age = "Minimum age is 16 years";
+    if (!formData.subjects) newErrors.subjects = "Subjects are required";
+    if (!formData.location) newErrors.location = "Location is required";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleVerify = async (code = otp.join("")) => {
-    if (code.length !== 6) {
-      setError("Please enter all 6 digits");
-      return;
-    }
-
-    setIsLoading(true);
-    setError("");
+  const handleNextClick = async () => {
+    if (!validateForm()) return;
 
     try {
-      await verifyEmail({ email, code });
-      showToast("Email verified successfully!", "success");
+      if (!studentId) {
+        setApiError("Student ID not found. Please start over.");
+        return;
+      }
+
+      console.log("🚀 Submitting enrollment for student:", studentId);
       
-      setTimeout(() => {
-        if (onSuccess) onSuccess();
-        onClose();
-      }, 1500);
-    } catch (err) {
-      const errorMessage = err?.message || "Invalid verification code. Please try again.";
-      setError(errorMessage);
-      showToast(errorMessage, "error");
-      setOtp(["", "", "", "", "", ""]);
-      inputRefs.current[0]?.focus();
-    } finally {
-      setIsLoading(false);
+      const enrollmentData = {
+        studentId: studentId,
+        schoolLevel: formData.schoolLevel,
+        Age: formData.age,
+        subjects: formData.subjects,
+        preferredLessonType: formData.lessonType,
+        location: formData.location,
+        struggles: formData.struggles,
+      };
+
+      // Submit enrollment
+      const result = await signupPage2(enrollmentData);
+      console.log("✅ Enrollment successful:", result);
+      
+      // ✨ Send verification code to email
+      console.log("📧 Sending verification code to:", userEmail);
+      await verifyEmail({ email: userEmail });
+      
+      // Then show the verification modal
+      setShowSuccessModal(false);
+      setShowVerificationModal(true);
+      
+    } catch (error) {
+      console.error("❌ Error:", error);
+      setApiError(error?.message || "Something went wrong. Please try again.");
     }
   };
 
-  const handleResend = async () => {
-    if (!canResend) return;
-
-    setIsLoading(true);
-    setError("");
+  const handleVerificationSuccess = () => {
+    console.log("✅ Email verified successfully");
     
-    try {
-      await verifyEmail({ email });
-      showToast("Verification code sent!", "success");
-      setResendTimer(60);
-      setCanResend(false);
-    } catch (err) {
-      const errorMessage = err?.message || "Failed to resend code. Please try again.";
-      showToast(errorMessage, "error");
-    } finally {
-      setIsLoading(false);
-    }
+    // Clean up temporary data
+    localStorage.removeItem('kynda_signup_data');
+    
+    // Mark email as verified in user data
+    const userData = JSON.parse(localStorage.getItem('kynda_user') || '{}');
+    userData.isEmailVerified = true;
+    localStorage.setItem('kynda_user', JSON.stringify(userData));
+    
+    // Navigate to dashboard
+    navigate("/dashboard");
   };
 
-  const handleSkip = () => {
-    if (import.meta.env.DEV) {
-      showToast("Verification skipped (dev mode)", "success");
-      setTimeout(() => {
-        if (onSuccess) onSuccess();
-        onClose();
-      }, 1000);
+  const updateFormData = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: "" }));
     }
+    if (apiError) setApiError("");
   };
-
-  if (!isOpen) return null;
-
+  
   return (
-    <>
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+    <div className="min-h-screen flex relative">
+      {/* Email Verification Modal */}
+      <EmailVerificationModal
+        isOpen={showVerificationModal}
+        onClose={() => setShowVerificationModal(false)}
+        email={userEmail}
+        onSuccess={handleVerificationSuccess}
+      />
 
-      {/* Modal Overlay */}
-      <div className="fixed inset-0 bg-opacity-50 z-50 flex items-center justify-center p-4 animate-fade-in">
-        {/* Modal Content */}
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative animate-scale-in">
-          {/* Close Button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
-            disabled={isLoading}
-          >
-            <X size={24} />
-          </button>
+      {/* Left Section */}
+      <div className="hidden lg:flex lg:w-1/2 bg-[url('../images/boy2.png')] bg-cover bg-center opacity-80 relative overflow-hidden">
+        <div className="relative z-10 p-12 flex flex-col justify-between">
+          <div className="flex items-center gap-3">
+            <img src="../images/Vector (1).png" className="w-12 h-12" alt="Kynda Logo" />
+            <span className="text-2xl font-bold text-gray-800">KYNDA</span>
+          </div>
 
-          <div className="p-8">
-            {/* Icon */}
-            <div className="flex justify-center mb-6">
-              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
-                <Mail size={40} className="text-blue-600" />
-              </div>
-            </div>
-
-            {/* Title */}
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-800 mb-2">
-                Verify Your Email
-              </h2>
-              <p className="text-gray-600">We've sent a 6-digit code to</p>
-              <p className="text-blue-600 font-semibold mt-1">{email}</p>
-            </div>
-
-            {/* OTP Input */}
-            <div className="mb-6">
-              <div className="flex gap-2 justify-center mb-4">
-                {otp.map((digit, index) => (
-                  <input
-                    key={index}
-                    ref={(el) => (inputRefs.current[index] = el)}
-                    type="text"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) => handleChange(index, e.target.value)}
-                    onKeyDown={(e) => handleKeyDown(index, e)}
-                    onPaste={handlePaste}
-                    disabled={isLoading}
-                    className={`w-12 h-14 text-center text-2xl font-bold border-2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition ${
-                      error ? "border-red-500" : "border-gray-300"
-                    } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-                  />
-                ))}
-              </div>
-              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-            </div>
-
-            {/* Verify Button */}
-            <button
-              onClick={() => handleVerify()}
-              disabled={isLoading || otp.some(digit => !digit)}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-semibold py-3 rounded-lg hover:from-blue-700 hover:to-indigo-800 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed mb-4"
-            >
-              {isLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Verifying...
-                </span>
-              ) : (
-                "Verify Email"
-              )}
-            </button>
-
-            {/* Resend Code */}
-            <div className="text-center">
-              <p className="text-sm text-gray-600 mb-2">Didn't receive the code?</p>
-              <button
-                onClick={handleResend}
-                disabled={!canResend || isLoading}
-                className={`text-sm font-medium ${
-                  canResend
-                    ? "text-blue-600 hover:text-blue-800 hover:underline"
-                    : "text-gray-400 cursor-not-allowed"
-                }`}
-              >
-                {canResend ? "Resend Code" : `Resend in ${resendTimer}s`}
-              </button>
-            </div>
-
-            {/* Development Skip Button */}
-            {import.meta.env.DEV && (
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <button
-                  onClick={handleSkip}
-                  className="w-full py-2 text-sm text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  Skip Verification (Dev Only)
-                </button>
-              </div>
-            )}
+          <div className="mt-70">
+            <h1 className="text-white text-5xl font-bold mb-4">
+              Learn <span className="text-orange-500">Smarter</span>
+            </h1>
+            <p className="text-gray-300 text-lg">
+              Tell us about yourself so we can match you with the perfect tutor.
+            </p>
           </div>
         </div>
       </div>
 
-      <style>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-        @keyframes scale-in {
-          from {
-            transform: scale(0.9);
-            opacity: 0;
-          }
-          to {
-            transform: scale(1);
-            opacity: 1;
-          }
-        }
-        @keyframes slide-in {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.2s ease-out;
-        }
-        .animate-scale-in {
-          animation: scale-in 0.3s ease-out;
-        }
-        .animate-slide-in {
-          animation: slide-in 0.3s ease-out;
-        }
-      `}</style>
-    </>
+      {/* Right Section (Form) */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50">
+        <div className="w-full max-w-2xl">
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Enrollment Details</h2>
+              <p className="text-gray-600 text-sm">Help us understand your learning preferences</p>
+            </div>
+
+            {/* API Error Display */}
+            {apiError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {apiError}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {/* School Level */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="relative">
+                  <label className="block text-gray-700 text-sm font-medium mb-2">
+                    School Level *
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowSchoolDropdown(!showSchoolDropdown)}
+                    className={`w-full px-4 py-3 border ${
+                      errors.schoolLevel ? "border-red-500" : "border-gray-300"
+                    } rounded-lg text-left flex items-center justify-between`}
+                  >
+                    <span className={formData.schoolLevel ? "text-gray-900" : "text-gray-500"}>
+                      {formData.schoolLevel || "Select"}
+                    </span>
+                    <ChevronRight 
+                      size={16} 
+                      className={`transform transition-transform ${
+                        showSchoolDropdown ? "rotate-90" : ""
+                      }`} 
+                    />
+                  </button>
+
+                  {showSchoolDropdown && (
+                    <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                      {schoolLevels.map((level) => (
+                        <button
+                          key={level}
+                          type="button"
+                          onClick={() => {
+                            updateFormData("schoolLevel", level);
+                            setShowSchoolDropdown(false);
+                          }}
+                          className="w-full px-4 py-3 hover:bg-blue-50 text-left text-sm border-b border-gray-100 last:border-b-0"
+                        >
+                          {level}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {errors.schoolLevel && (
+                    <p className="text-red-500 text-xs mt-1">{errors.schoolLevel}</p>
+                  )}
+                </div>
+
+                {/* Age */}
+                <div>
+                  <label className="block text-gray-700 text-sm font-medium mb-2">
+                    Age *
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.age}
+                    onChange={(e) => updateFormData("age", e.target.value)}
+                    placeholder="Minimum of 16"
+                    className={`w-full px-4 py-3 border ${
+                      errors.age ? "border-red-500" : "border-gray-300"
+                    } rounded-lg`}
+                    min="16"
+                    max="100"
+                  />
+                  {errors.age && <p className="text-red-500 text-xs mt-1">{errors.age}</p>}
+                </div>
+              </div>
+
+              {/* Subjects */}
+              <div>
+                <label className="block text-gray-700 text-sm font-medium mb-2">
+                  Subjects *
+                </label>
+                <input
+                  type="text"
+                  value={formData.subjects}
+                  onChange={(e) => updateFormData("subjects", e.target.value)}
+                  placeholder="Math, English, Physics..."
+                  className={`w-full px-4 py-3 border ${
+                    errors.subjects ? "border-red-500" : "border-gray-300"
+                  } rounded-lg`}
+                />
+                {errors.subjects && <p className="text-red-500 text-xs mt-1">{errors.subjects}</p>}
+              </div>
+
+              {/* Lesson Type */}
+              <div className="relative">
+                <label className="block text-gray-700 text-sm font-medium mb-2">
+                  Preferred Lesson Type
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => setShowLessonDropdown(!showLessonDropdown)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-left flex items-center justify-between"
+                >
+                  <span className={formData.lessonType ? "text-gray-900" : "text-gray-500"}>
+                    {formData.lessonType || "Select"}
+                  </span>
+                  <ChevronRight 
+                    size={16} 
+                    className={`transform transition-transform ${
+                      showLessonDropdown ? "rotate-90" : ""
+                    }`} 
+                  />
+                </button>
+
+                {showLessonDropdown && (
+                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                    {lessonTypes.map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => {
+                          updateFormData("lessonType", type);
+                          setShowLessonDropdown(false);
+                        }}
+                        className="w-full px-4 py-3 hover:bg-blue-50 text-left text-sm border-b border-gray-100 last:border-b-0"
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Location */}
+              <div>
+                <label className="block text-gray-700 text-sm font-medium mb-2">
+                  Location *
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.location}
+                    onChange={(e) => updateFormData("location", e.target.value)}
+                    placeholder="Your location"
+                    className={`w-full px-4 py-3 pr-10 border ${
+                      errors.location ? "border-red-500" : "border-gray-300"
+                    } rounded-lg`}
+                  />
+                  <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                </div>
+                {errors.location && <p className="text-red-500 text-xs mt-1">{errors.location}</p>}
+              </div>
+
+              {/* Struggles */}
+              <div>
+                <label className="block text-gray-700 text-sm font-medium mb-2">
+                  Your Struggles
+                </label>
+                <textarea
+                  value={formData.struggles}
+                  onChange={(e) => updateFormData("struggles", e.target.value)}
+                  placeholder="Explain any struggles you have in learning"
+                  rows={3}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex justify-between mt-8">
+              <button
+                type="button"
+                onClick={() => navigate("/signup")}
+                className="flex items-center gap-2 px-6 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ChevronLeft size={20} />
+                Previous
+              </button>
+
+              <button
+                type="button"
+                onClick={handleNextClick}
+                disabled={loading}
+                className="flex items-center gap-2 px-8 py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {loading ? "Saving..." : "Next"}
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
