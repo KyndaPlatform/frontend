@@ -1,10 +1,17 @@
 // src/components/ProtectedRoute.jsx
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../auth/AuthContext';
+import React from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
 
 const ProtectedRoute = ({ children }) => {
-  const { token, user, loading } = useAuth();  // Changed from isAuthenticated, isLoading
+  const { token, user, loading } = useAuth(); // Changed from isAuthenticated, isLoading
+
+  // TEMPORARY: Disable protection in development
+  // const DEV_MODE = true;
+
+  // if (DEV_MODE) {
+  //   return children;
+  // }
 
   // Show loading spinner while checking authentication
   if (loading) {

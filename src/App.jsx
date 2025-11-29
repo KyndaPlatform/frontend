@@ -30,6 +30,8 @@ import TutorResources from "./pages/Tutor/TutorResources";
 import EmailVerificationModal from "./pages/EmailVerificationModal";
 import FAQs from "./pages/FAQs";
 import MyLearning from "./pages/Student/MyLearning";
+import BookingSection from "./pages/Student/BookingSection";
+import DashboardLayout from "./pages/Student/DashboardLayout";
 
 export default function App() {
   return (
@@ -72,13 +74,17 @@ export default function App() {
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <DashBoard />
+              <DashboardLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<DashBoard />} />
+          <Route path="my-learning" element={<MyLearning />} />
+          <Route path="booking-section" element={<BookingSection />} />
+        </Route>
 
         <Route
-          path="/tutor-dashoard"
+          path="/tutor-dashboard"
           element={
             <ProtectedRoute>
               <TutorDashboard />
