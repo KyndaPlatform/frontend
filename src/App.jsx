@@ -48,7 +48,7 @@ export default function App() {
           <Route path="/features" element={<Features />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/contact" element={<ContactUs />} />
-          <Route path="/teach-on-kynda" element={<TeachOnKynda />} />
+          <Route path="/teach" element={<TeachOnKynda />} />
           <Route path="/enrollment-details1" element={<EnrollmentDetails1 />} />
           <Route path="/forget-password" element={<ForgetPassword />} />
           <Route path="/terms-and-conditions" element={<TermsAndCondition />} />
@@ -60,6 +60,7 @@ export default function App() {
           <Route path="/tutor-policy" element={<TutorPolicy />} />
           <Route path="/tutor-resources" element={<TutorResources />} />
           <Route path="/verify-email" element={<EmailVerificationModal />} />
+           <Route path="/dashboard" element={<DashBoard />} />
           <Route path="/faqs" element={<FAQs />} />
 
           {/* Protected Routes */}

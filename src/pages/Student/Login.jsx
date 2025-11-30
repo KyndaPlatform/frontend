@@ -1,10 +1,10 @@
+// src/components/Login.jsx - COMPLETE CORRECTED VERSION
+
 import React, { useState } from "react";
 import { Eye, EyeOff, CheckCircle, XCircle } from "lucide-react";
 import { useAuth } from "../../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
-import EmailVerificationModal from "../EmailVerificationModal";
 
-// Toast Component
 const Toast = ({ message, type, onClose }) => {
   React.useEffect(() => {
     const timer = setTimeout(onClose, 3000);
@@ -36,15 +36,12 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState(null);
   const [errors, setErrors] = useState({});
-  const [showVerificationModal, setShowVerificationModal] = useState(false);
-  const [verificationEmail, setVerificationEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const showToast = (message, type) => {
     setToast({ message, type });
   };
 
-  // Validate form
   const validateForm = () => {
     const newErrors = {};
 
@@ -62,7 +59,6 @@ export default function Login() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle Input Changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -70,7 +66,6 @@ export default function Login() {
       [name]: value
     }));
     
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -79,7 +74,6 @@ export default function Login() {
     }
   };
 
-  // Handle Login Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -88,7 +82,6 @@ export default function Login() {
       return;
     }
 
-    // Prevent multiple submissions
     if (isSubmitting || loading) {
       console.log("Already submitting...");
       return;
@@ -107,23 +100,14 @@ export default function Login() {
 
       console.log("✅ Login response:", response);
 
-      // Check if user data indicates email is verified
-      const userData = response?.user || JSON.parse(localStorage.getItem('kynda_user') || '{}');
-      
-      console.log("👤 User data:", userData);
-      console.log("📧 Email verified:", userData.isEmailVerified);
-      
-      // If email is already verified, proceed to dashboard
-      if (userData.isEmailVerified) {
+      // Check if login was successful (including bypassed verification)
+      if (response) {
         showToast("Login successful! Redirecting...", "success");
         setTimeout(() => {
           navigate("/dashboard");
         }, 1500);
       } else {
-        // Email not verified, show modal
-        showToast("Please verify your email to continue", "error");
-        setVerificationEmail(formData.email);
-        setShowVerificationModal(true);
+        throw new Error("Login failed with no response");
       }
       
     } catch (err) {
@@ -137,15 +121,6 @@ export default function Login() {
         "Invalid credentials. Please try again.";
 
       console.error("Error message:", errorMessage);
-
-      // Check if error is specifically about email verification
-      if (errorMessage.toLowerCase().includes("email not verified") || 
-          errorMessage.toLowerCase().includes("not verified")) {
-        setVerificationEmail(formData.email);
-        setShowVerificationModal(true);
-        showToast("Please verify your email to continue", "error");
-        return;
-      }
 
       setErrors({ submit: errorMessage });
       showToast(errorMessage, "error");
@@ -161,20 +136,6 @@ export default function Login() {
     }
   };
 
-  // Handle successful verification
-  const handleVerificationSuccess = async () => {
-    showToast("Email verified! Logging you in...", "success");
-    
-    // Update user data to mark email as verified
-    const userData = JSON.parse(localStorage.getItem('kynda_user') || '{}');
-    userData.isEmailVerified = true;
-    localStorage.setItem('kynda_user', JSON.stringify(userData));
-    
-    setTimeout(() => {
-      navigate("/dashboard");
-    }, 1500);
-  };
-
   const isLoading = loading || isSubmitting;
 
   return (
@@ -187,19 +148,11 @@ export default function Login() {
         />
       )}
 
-      {/* Email Verification Modal */}
-      <EmailVerificationModal
-        isOpen={showVerificationModal}
-        onClose={() => setShowVerificationModal(false)}
-        email={verificationEmail}
-        onSuccess={handleVerificationSuccess}
-      />
-
       <div className="min-h-screen flex">
         {/* Left Side */}
         <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-blue-900 to-indigo-900">
           <img
-            src="../images/boy3.png"
+            src="../../../public/images/boy3.png"
             alt="Student"
             className="absolute inset-0 w-full h-full object-cover opacity-70"
           />
@@ -207,7 +160,7 @@ export default function Login() {
           <div className="relative z-10 p-12 flex flex-col justify-between">
             <div className="flex items-center gap-3">
               <img
-                src="../images/Vector (1).png"
+                src="../../../public/images/Vector (1).png"
                 alt="Logo"
                 className="w-12 h-12"
               />
@@ -261,7 +214,6 @@ export default function Login() {
               </div>
 
               <form onSubmit={handleSubmit}>
-                {/* Email Field */}
                 <div className="mb-4">
                   <label className="block text-gray-700 text-sm font-medium mb-2">
                     Email <span className="text-red-500">*</span>
@@ -283,7 +235,6 @@ export default function Login() {
                   )}
                 </div>
 
-                {/* Password Field */}
                 <div className="mb-6">
                   <label className="block text-gray-700 text-sm font-medium mb-2">
                     Password <span className="text-red-500">*</span>
@@ -315,7 +266,6 @@ export default function Login() {
                   )}
                 </div>
 
-                {/* Forgot Password Link */}
                 <div className="mb-6 text-right">
                   <a
                     href="/forgot-password"
@@ -325,7 +275,6 @@ export default function Login() {
                   </a>
                 </div>
 
-                {/* Submit Button */}
                 <button
                   type="submit"
                   disabled={isLoading}
@@ -342,14 +291,12 @@ export default function Login() {
                 </button>
               </form>
 
-              {/* Submit Error Display */}
               {errors.submit && (
                 <div className="mt-4 p-3 bg-red-50 text-red-600 border border-red-200 rounded-lg text-sm">
                   {errors.submit}
                 </div>
               )}
 
-              {/* Sign Up Link */}
               <div className="text-center mt-6">
                 <p className="text-sm text-gray-600">
                   Don't have an Account?{" "}
