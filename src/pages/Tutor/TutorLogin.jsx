@@ -199,7 +199,7 @@ export default function TutorLogin() {
         {/* Left Side */}
         <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-blue-900 to-indigo-900">
           <img
-            src="../../../public/images/boy3.png"
+            src="/public/images/boy3.png"
             alt="Student"
             className="absolute inset-0 w-full h-full object-cover opacity-70"
           />
@@ -207,7 +207,7 @@ export default function TutorLogin() {
           <div className="relative z-10 p-12 flex flex-col justify-between">
             <div className="flex items-center gap-3">
               <img
-                src="../../../public/images/Vector (1).png"
+                src="/public/images/Vector (1).png"
                 alt="Logo"
                 className="w-12 h-12"
               />
