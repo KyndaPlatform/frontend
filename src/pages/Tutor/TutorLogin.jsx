@@ -318,7 +318,7 @@ export default function TutorLogin() {
                 {/* Forgot Password Link */}
                 <div className="mb-6 text-right">
                   <a
-                    href="/forgot-password"
+                    href="/forget-password"
                     className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                   >
                     Forgot Password?
