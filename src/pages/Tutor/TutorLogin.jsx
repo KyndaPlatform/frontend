@@ -31,7 +31,7 @@ export default function TutorLogin() {
 
   const [formData, setFormData] = useState({
     email: "",
-    password: "",
+    password: ""
   });
   const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState(null);
@@ -65,16 +65,16 @@ export default function TutorLogin() {
   // Handle Input Changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      [name]: value,
+      [name]: value
     }));
-
+    
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors((prev) => ({
+      setErrors(prev => ({
         ...prev,
-        [name]: "",
+        [name]: ""
       }));
     }
   };
@@ -82,7 +82,7 @@ export default function TutorLogin() {
   // Handle Login Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
     if (!validateForm()) {
       showToast("Please fix the errors above", "error");
       return;
@@ -99,22 +99,20 @@ export default function TutorLogin() {
 
     try {
       console.log("📧 Email:", formData.email);
-
+      
       const response = await login({
         email: formData.email.trim(),
-        password: formData.password,
+        password: formData.password
       });
 
       console.log("✅ Login response:", response);
 
       // Check if user data indicates email is verified
-      const userData =
-        response?.user ||
-        JSON.parse(localStorage.getItem("kynda_user") || "{}");
-
+      const userData = response?.user || JSON.parse(localStorage.getItem('kynda_user') || '{}');
+      
       console.log("👤 User data:", userData);
       console.log("📧 Email verified:", userData.isEmailVerified);
-
+      
       // If email is already verified, proceed to dashboard
       if (userData.isEmailVerified) {
         showToast("Login successful! Redirecting...", "success");
@@ -127,10 +125,11 @@ export default function TutorLogin() {
         setVerificationEmail(formData.email);
         setShowVerificationModal(true);
       }
+      
     } catch (err) {
       console.error("❌ Login failed:", err);
-
-      const errorMessage =
+      
+      const errorMessage = 
         err?.message ||
         err?.response?.data?.message ||
         err?.response?.data?.detail ||
@@ -140,10 +139,8 @@ export default function TutorLogin() {
       console.error("Error message:", errorMessage);
 
       // Check if error is specifically about email verification
-      if (
-        errorMessage.toLowerCase().includes("email not verified") ||
-        errorMessage.toLowerCase().includes("not verified")
-      ) {
+      if (errorMessage.toLowerCase().includes("email not verified") || 
+          errorMessage.toLowerCase().includes("not verified")) {
         setVerificationEmail(formData.email);
         setShowVerificationModal(true);
         showToast("Please verify your email to continue", "error");
@@ -167,12 +164,12 @@ export default function TutorLogin() {
   // Handle successful verification
   const handleVerificationSuccess = async () => {
     showToast("Email verified! Logging you in...", "success");
-
+    
     // Update user data to mark email as verified
-    const userData = JSON.parse(localStorage.getItem("kynda_user") || "{}");
+    const userData = JSON.parse(localStorage.getItem('kynda_user') || '{}');
     userData.isEmailVerified = true;
-    localStorage.setItem("kynda_user", JSON.stringify(userData));
-
+    localStorage.setItem('kynda_user', JSON.stringify(userData));
+    
     setTimeout(() => {
       navigate("/dashboard");
     }, 1500);
@@ -202,7 +199,7 @@ export default function TutorLogin() {
         {/* Left Side */}
         <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-blue-900 to-indigo-900">
           <img
-            src="../images/boy3.png"
+            src="../../../public/images/boy3.png"
             alt="Student"
             className="absolute inset-0 w-full h-full object-cover opacity-70"
           />
@@ -210,7 +207,7 @@ export default function TutorLogin() {
           <div className="relative z-10 p-12 flex flex-col justify-between">
             <div className="flex items-center gap-3">
               <img
-                src="../images/Vector (1).png"
+                src="../../../public/images/Vector (1).png"
                 alt="Logo"
                 className="w-12 h-12"
               />
@@ -257,11 +254,10 @@ export default function TutorLogin() {
             <div className="bg-white rounded-2xl shadow-xl p-8">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-gray-800 mb-2">
-                  Welcome Back to <span className="text-blue-600">Kynda!</span>
+                  Welcome Back to{" "}
+                  <span className="text-blue-600">Kynda!</span>
                 </h2>
-                <p className="text-gray-600">
-                  Login to your account to continue
-                </p>
+                <p className="text-gray-600">Login to your account to continue</p>
               </div>
 
               <form onSubmit={handleSubmit}>
@@ -315,9 +311,7 @@ export default function TutorLogin() {
                     </button>
                   </div>
                   {errors.password && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.password}
-                    </p>
+                    <p className="text-red-500 text-xs mt-1">{errors.password}</p>
                   )}
                 </div>
 

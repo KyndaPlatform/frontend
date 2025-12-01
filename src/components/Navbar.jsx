@@ -6,6 +6,8 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showMobileLoginDropdown, setShowMobileLoginDropdown] = useState(false);
+  const [showMobileSignupDropdown, setShowMobileSignupDropdown] = useState(false);
 
   // Handle scroll effect
   useEffect(() => {
@@ -179,8 +181,8 @@ const Navbar = () => {
         <div className="h-full overflow-y-auto px-4 py-6 space-y-1">
           {[
             { name: 'Home', path: '/' },
-            { name: 'About Us', path: '/about-us' },
-            { name: 'How it Works', path: '/howitworks' },
+            { name: 'About Us', path: '/about' },
+            { name: 'How it Works', path: '/how-it-works' },
             { name: 'Features', path: '/features' },
             { name: 'Contact Us', path: '/contact' },
             { name: 'Teach on Kynda', path: '/teach-on-kynda' }
@@ -204,30 +206,91 @@ const Navbar = () => {
           )}
 
           <div className="pt-4 space-y-3">
-            <Link
-              to="/login"
-              onClick={() => setIsMenuOpen(false)}
-              className={`block py-3 px-4 text-center text-gray-700 border-2 border-indigo-900 rounded-lg hover:bg-indigo-50 transition-all duration-300 transform ${
-                isMenuOpen
-                  ? 'translate-x-0 opacity-100'
-                  : 'translate-x-8 opacity-0'
-              }`}
-              style={{ transitionDelay: isMenuOpen ? '300ms' : '0ms' }}
-            >
-              Login
-            </Link>
-            <Link
-              to="/onboarding"
-              onClick={() => setIsMenuOpen(false)}
-              className={`block py-3 px-4 text-center bg-indigo-900 text-white rounded-lg hover:bg-indigo-800 transition-all duration-300 transform ${
-                isMenuOpen
-                  ? 'translate-x-0 opacity-100'
-                  : 'translate-x-8 opacity-0'
-              }`}
-              style={{ transitionDelay: isMenuOpen ? '350ms' : '0ms' }}
-            >
-              Sign Up
-            </Link>
+            {/* Mobile Login Dropdown */}
+            <div className={`transform transition-all duration-300 ${
+              isMenuOpen
+                ? 'translate-x-0 opacity-100'
+                : 'translate-x-8 opacity-0'
+            }`}
+            style={{ transitionDelay: isMenuOpen ? '300ms' : '0ms' }}>
+              <button
+                onClick={() => setShowMobileLoginDropdown(!showMobileLoginDropdown)}
+                className="w-full flex items-center justify-between py-3 px-4 text-gray-700 border-2 border-indigo-900 rounded-lg hover:bg-indigo-50 transition-colors duration-300"
+              >
+                <span>Login</span>
+                <ChevronDown
+                  size={16}
+                  className={`transform transition-transform duration-300 ${
+                    showMobileLoginDropdown ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
+              
+              {/* Mobile Login Dropdown Options */}
+              <div
+                className={`mt-2 space-y-2 overflow-hidden transition-all duration-300 ${
+                  showMobileLoginDropdown ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'
+                }`}
+              >
+                <Link
+                  to="/login"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block py-3 px-4 text-gray-700 bg-gray-50 hover:bg-indigo-50 hover:text-indigo-900 rounded-lg transition-colors duration-200 ml-4"
+                >
+                  Student Login
+                </Link>
+                <Link
+                  to="/tutor-login"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block py-3 px-4 text-gray-700 bg-gray-50 hover:bg-indigo-50 hover:text-indigo-900 rounded-lg transition-colors duration-200 ml-4"
+                >
+                  Tutor Login
+                </Link>
+              </div>
+            </div>
+
+            {/* Mobile Sign Up Dropdown */}
+            <div className={`transform transition-all duration-300 ${
+              isMenuOpen
+                ? 'translate-x-0 opacity-100'
+                : 'translate-x-8 opacity-0'
+            }`}
+            style={{ transitionDelay: isMenuOpen ? '350ms' : '0ms' }}>
+              <button
+                onClick={() => setShowMobileSignupDropdown(!showMobileSignupDropdown)}
+                className="w-full flex items-center justify-between py-3 px-4 bg-indigo-900 text-white rounded-lg hover:bg-indigo-800 transition-colors duration-300"
+              >
+                <span>Sign Up</span>
+                <ChevronDown
+                  size={16}
+                  className={`transform transition-transform duration-300 ${
+                    showMobileSignupDropdown ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
+              
+              {/* Mobile Sign Up Dropdown Options */}
+              <div
+                className={`mt-2 space-y-2 overflow-hidden transition-all duration-300 ${
+                  showMobileSignupDropdown ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'
+                }`}
+              >
+                <Link
+                  to="/student-signup"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block py-3 px-4 text-gray-700 bg-gray-50 hover:bg-indigo-50 hover:text-indigo-900 rounded-lg transition-colors duration-200 ml-4"
+                >
+                  Student Sign Up
+                </Link>
+                <Link
+                  to="/tutor-signup"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block py-3 px-4 text-gray-700 bg-gray-50 hover:bg-indigo-50 hover:text-indigo-900 rounded-lg transition-colors duration-200 ml-4"
+                >
+                  Tutor Sign Up
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>

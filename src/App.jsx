@@ -29,6 +29,12 @@ import TutorPolicy from "./pages/Tutor/TutorPolicy";
 import TutorResources from "./pages/Tutor/TutorResources";
 import EmailVerificationModal from "./pages/EmailVerificationModal";
 import FAQs from "./pages/FAQs";
+import TutorChat from "./pages/Tutor/TutorChat";
+import TutorCourses from "./pages/Tutor/TutorCourses";
+import TutorEarning from "./pages/Tutor/TutorEarning";
+import TutorReport from "./pages/Tutor/TutorReport";
+import TutorSection from "./pages/Tutor/TutorSection";
+import TutorResource1 from "./pages/Tutor/TutorResource1";
 
 export default function App() {
   return (
@@ -62,8 +68,15 @@ export default function App() {
           <Route path="/verify-email" element={<EmailVerificationModal />} />
            <Route path="/dashboard" element={<DashBoard />} />
           <Route path="/faqs" element={<FAQs />} />
+          <Route path="/tutor-chat" element={<TutorChat />} />
+          <Route path="/tutor-courses" element={<TutorCourses />} />
+          <Route path="/tutor-earning" element={<TutorEarning />} />
+          <Route path="/tutor-report" element={<TutorReport />} />
+          <Route path="/tutor-section" element={<TutorSection />} />
+          <Route path="/tutor-resource1" element={<TutorResource1 />} />
+           <Route path="/tutor-dashboard" element={<TutorDashboard />} />
 
-          {/* Protected Routes */}
+          {/* Protected Routes 
           <Route
             path="/dashboard"
             element={
@@ -80,7 +93,7 @@ export default function App() {
                 <TutorDashboard />
               </ProtectedRoute>
             }
-          />
+          />*/}
         </Routes>
       </AuthProvider>
     

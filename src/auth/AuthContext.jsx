@@ -1,5 +1,4 @@
-// src/auth/AuthContext.jsx - UPDATED TUTOR SIGNUP VERSION
-
+// src/auth/AuthContext.jsx - COMPLETE CORRECTED VERSION
 import React, {
   createContext,
   useContext,
@@ -79,14 +78,30 @@ export const AuthProvider = ({ children }) => {
 
   const handleAxiosError = useCallback((error) => {
     if (axios.isAxiosError(error)) {
-      console.error("API Error:", {
+      console.error("📥 Detailed API Error:", {
         status: error.response?.status,
         data: error.response?.data,
         message: error.message,
+        config: error.config,
       });
 
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
+      // Extract specific error message from server response
+      if (error.response?.data) {
+        const serverError = error.response.data;
+        
+        if (serverError.message) {
+          throw new Error(serverError.message);
+        }
+        if (serverError.error) {
+          throw new Error(serverError.error);
+        }
+        if (serverError.errors && Array.isArray(serverError.errors)) {
+          const errorMessages = serverError.errors.map(err => err.msg || err.message).join(', ');
+          throw new Error(errorMessages || "Validation failed");
+        }
+        if (typeof serverError === 'string') {
+          throw new Error(serverError);
+        }
       }
 
       if (error.response?.status === 401) {
@@ -272,73 +287,141 @@ export const AuthProvider = ({ children }) => {
     [api]
   );
 
-  // UPDATED TUTOR SIGNUP FUNCTIONS
-  const tutorSignup = useCallback(
-    async (data) => {
-      setLoading(true);
-      try {
-        console.log("🔄 Making tutor signup request...");
-        console.log("📦 Full payload:", data);
+  // CORRECTED TUTOR SIGNUP FUNCTION
+ // In AuthContext.jsx - Update the tutorSignup function
+const tutorSignup = useCallback(
+  async (data) => {
+    setLoading(true);
+    try {
+      console.log("🔄 Making tutor signup request...");
+      console.log("📦 Full payload:", data);
 
-        // Required fields for basic tutor signup
-        const requiredFields = [
-          'firstName', 'lastName', 'email', 'phoneNumber', 'password', 'confirmPassword'
-        ];
+      // REQUIRED FIELDS FOR TUTOR SIGNUP
+      const requiredFields = [
+        'firstName', 'lastName', 'email', 'phoneNumber', 'password', 'confirmPassword'
+      ];
 
-        const missingFields = requiredFields.filter(field => !data[field]);
-        
-        if (missingFields.length > 0) {
-          throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
-        }
-
-        // Prepare the data for basic tutor signup
-        const signupData = {
-          firstName: data.firstName.trim(),
-          lastName: data.lastName.trim(),
-          email: data.email.trim().toLowerCase(),
-          phoneNumber: data.phoneNumber.trim(),
-          password: data.password,
-          confirmPassword: data.confirmPassword
-        };
-
-        console.log("📤 Sending to /api/auth/tutor-signup:", signupData);
-
-        const res = await api.post("/api/auth/tutor-signup", signupData);
-        console.log("✅ Tutor signup response:", res.data);
-
-        // Store auth data if returned
-        if (res.data.token) {
-          setToken(res.data.token);
-          const userData = res.data.user || {
-            id: res.data.userId,
-            email: data.email,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            role: 'tutor',
-            isEmailVerified: false
-          };
-          setUser(userData);
-          localStorage.setItem("kynda_token", res.data.token);
-          localStorage.setItem("kynda_user", JSON.stringify(userData));
-        }
-
-        return res.data;
-      } catch (error) {
-        console.error("❌ Tutor signup error:", error);
-        
-        if (error.response?.data?.message) {
-          throw new Error(error.response.data.message);
-        }
-        if (error.response?.status === 400) {
-          throw new Error("Please fill in all required fields correctly");
-        }
-        throw new Error(error.message || "Tutor registration failed");
-      } finally {
-        setLoading(false);
+      const missingFields = requiredFields.filter(field => !data[field] || data[field].trim() === '');
+      
+      if (missingFields.length > 0) {
+        console.error("❌ Missing fields:", missingFields);
+        throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
       }
-    },
-    [api]
-  );
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(data.email)) {
+        throw new Error("Please enter a valid email address");
+      }
+
+      // Validate phone number (remove any spaces)
+      const cleanPhone = data.phoneNumber.replace(/\s/g, '');
+      if (cleanPhone.length < 10) {
+        throw new Error("Please enter a valid phone number (at least 10 digits)");
+      }
+
+      // Validate password length
+      if (data.password.length < 6) {
+        throw new Error("Password must be at least 6 characters long");
+      }
+
+      // Validate passwords match
+      if (data.password !== data.confirmPassword) {
+        throw new Error("Passwords do not match");
+      }
+
+      // Prepare the data for tutor signup - EXACTLY as backend expects
+      const signupData = {
+        firstName: data.firstName.trim(),
+        lastName: data.lastName.trim(),
+        email: data.email.trim().toLowerCase(),
+        phoneNumber: cleanPhone,
+        password: data.password,
+        confirmPassword: data.confirmPassword // Ensure this is included
+      };
+
+      console.log("📤 Sending to /api/auth/tutor-signup:", JSON.stringify(signupData, null, 2));
+
+      const res = await api.post("/api/auth/tutor-signup", signupData);
+      console.log("✅ Tutor signup response:", res.data);
+
+      // Store auth data if returned
+      if (res.data.token) {
+        setToken(res.data.token);
+        const userData = res.data.user || {
+          id: res.data.userId,
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          role: 'tutor',
+          isEmailVerified: false
+        };
+        setUser(userData);
+        localStorage.setItem("kynda_token", res.data.token);
+        localStorage.setItem("kynda_user", JSON.stringify(userData));
+        
+        // Store tutor ID if available
+        if (res.data.tutorId) {
+          localStorage.setItem("kynda_tutor_id", res.data.tutorId);
+        }
+      }
+
+      return res.data;
+    } catch (error) {
+      console.error("❌ Tutor signup error:", error);
+      console.error("❌ Error details:", {
+        status: error.response?.status,
+        data: error.response?.data,
+        config: error.config?.data
+      });
+      
+      // Enhanced error handling
+      if (error.response?.data) {
+        const serverError = error.response.data;
+        console.error("📥 Server error response:", serverError);
+        
+        // Try different property names for error message
+        if (serverError.message) {
+          // Check for specific error messages
+          if (serverError.message.toLowerCase().includes('all fields are required')) {
+            throw new Error("Please fill in all required fields: First name, Last name, Email, Phone number, Password, and Confirm Password");
+          }
+          throw new Error(serverError.message);
+        }
+        if (serverError.error) {
+          throw new Error(serverError.error);
+        }
+        if (serverError.errors && Array.isArray(serverError.errors)) {
+          const errorMessages = serverError.errors.map(err => err.msg || err.message).join(', ');
+          throw new Error(errorMessages || "Validation failed");
+        }
+      }
+      
+      // Specific HTTP status error messages
+      if (error.response?.status === 400) {
+        throw new Error("Invalid data provided. Please check all fields and try again.");
+      }
+      
+      if (error.response?.status === 409) {
+        throw new Error("An account with this email already exists.");
+      }
+      
+      if (error.response?.status === 422) {
+        throw new Error("Validation failed. Please check your input data.");
+      }
+      
+      // Network errors
+      if (error.code === "ERR_NETWORK") {
+        throw new Error("Network error. Please check your internet connection.");
+      }
+      
+      throw new Error(error.message || "Tutor registration failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  },
+  [api]
+);
 
   const tutorQualifications = useCallback(
     async (data) => {
@@ -348,7 +431,7 @@ export const AuthProvider = ({ children }) => {
         console.log("📦 Payload:", data);
 
         const requiredFields = [
-          'highestEducation', 'age', 'subjectsYouTeach', 'teachingLevel',
+          'highestEducation', 'age', 'subjects', 'teachingLevels',
           'hourlyRate', 'yearsOfExperience', 'location'
         ];
 
@@ -361,8 +444,8 @@ export const AuthProvider = ({ children }) => {
         const payload = {
           highestEducation: data.highestEducation,
           age: parseInt(data.age),
-          subjects: data.subjectsYouTeach,
-          teachingLevels: data.teachingLevel,
+          subjects: data.subjects,
+          teachingLevels: data.teachingLevels,
           hourlyRate: parseInt(data.hourlyRate),
           yearsOfExperience: parseInt(data.yearsOfExperience),
           location: data.location
@@ -512,7 +595,6 @@ export const AuthProvider = ({ children }) => {
     [api, handleAxiosError]
   );
 
-  // Other existing functions...
   const sendVerificationCode = useCallback(
     async (email) => {
       console.log("⚠️ TEMPORARY: Email verification disabled for:", email);
@@ -621,6 +703,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("kynda_token");
     localStorage.removeItem("kynda_user");
     localStorage.removeItem("kynda_student_id");
+    localStorage.removeItem("kynda_tutor_id");
   }, []);
 
   const value = useMemo(
