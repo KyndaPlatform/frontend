@@ -48,7 +48,7 @@ export default function CategoryNav() {
 
 function SearchFilter() {
   return (
-    <div className="absolute top-full right-0  translate-y-2 bg-white w-[450px] py-4 shadow">
+    <div className="absolute top-full right-0  translate-y-2 bg-white w-[450px] py-4 shadow z-50 rounded-xl">
       <header className="flex justify-between px-4 pb-2 border-b border-gray-200">
         <h3>search on kynda</h3>
         <button className="flex justify-center items-center w-7 h-7 bg-[#E2E8F0] rounded-full cursor-pointer">

@@ -1,11 +1,18 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import StudentNavbar from "../../components/StudentNavbar";
 import Footer from "../../components/Footer";
 import CategoryNav from "./CategoryNav";
 import profileImg from "../../../public/images/tutor.png";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  getFirstWeekdayOfMonth,
+  getDaysInMonth,
+  canGoToPreviousMonth,
+} from "../../utils/calendarUtils";
+import { generateTimeSlots } from "../../utils/timeUtils";
 
-const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS_SHORT = [
   "Jan",
   "Feb",
@@ -23,24 +30,33 @@ const MONTHS_SHORT = [
 
 export default function BookingSection() {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(null);
+
   const monthIndex = currentDate.getMonth(); // 0–11
   const year = currentDate.getFullYear();
 
-  function changeMonth(currentDate, direction) {
+  const changeMonth = (currentDate, direction) => {
     return new Date(
       currentDate.getFullYear(),
       currentDate.getMonth() + direction,
       1
     );
-  }
+  };
 
-  function handleNextMonth() {
+  const handleNextMonth = () => {
     setCurrentDate(changeMonth(currentDate, +1));
-  }
+  };
 
-  function handlePrevMonth() {
-    setCurrentDate(changeMonth(currentDate, -1));
-  }
+  const handlePrevMonth = () => {
+    if (canGoToPreviousMonth(currentDate)) {
+      setCurrentDate(changeMonth(currentDate, -1));
+    }
+  };
+
+  const selectDateHandler = (dateKey) => {
+    setSelectedDate(dateKey);
+    console.log("Selected date:", dateKey);
+  };
 
   return (
     <section className="max-w-screen-2xl mx-auto px-2 py-8 grid grid-cols-1 sm:grid-cols-1 md:grid-cols-6 lg:grid-cols-6 xl:grid-cols-5 gap-10">
@@ -84,8 +100,9 @@ export default function BookingSection() {
               </time>
               <div className="flex gap-6">
                 <button
-                  className="cursor-pointer active:scale-95"
+                  className="cursor-pointer disabled:opacity-50 disabled:text-gray-400 active:scale-95"
                   onClick={handlePrevMonth}
+                  disabled={!canGoToPreviousMonth(currentDate)}
                 >
                   <ChevronLeft />
                 </button>
@@ -100,7 +117,11 @@ export default function BookingSection() {
             {/* the main calendar digits */}
             <article className="mt-8">
               <CalendarHeader days={days} />
-              <CalendarWeekdays />
+              <CalendarWeekdays
+                currentDate={currentDate}
+                handleSelectDate={selectDateHandler}
+                selectedDate={selectedDate}
+              />
             </article>
           </div>
         </div>
@@ -131,20 +152,40 @@ function CalendarHeader({ days }) {
   );
 }
 
-function CalendarWeekdays({ currentDate }) {
-  const start = 1;
-  const end = 31;
+function CalendarWeekdays({ currentDate, handleSelectDate, selectedDate }) {
+  const firstDayOfMonth = getFirstWeekdayOfMonth(currentDate);
+  const totalDaysInMonth = getDaysInMonth(currentDate);
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth() + 1;
+
+  const emptyBoxes = Array(firstDayOfMonth).fill("");
 
   return (
     <div className="grid grid-cols-7 gap-1">
-      {Array.from({ length: end - start + 1 }, (_, i) => (
-        <button
-          key={i + start}
-          className="py-4 text-[#2D2D2D] text-sm text-center bg-white border border-gray-300 cursor-pointer"
-        >
-          {i + start}
-        </button>
+      {emptyBoxes.map((_, i) => (
+        <div
+          key={`empty-${year}-${month}-${i}`}
+          className="py-4 text-[#2D2D2D] text-sm text-center"
+        />
       ))}
+      {Array.from({ length: totalDaysInMonth }, (_, i) => {
+        const day = i + 1;
+        const dateKey = `${year}-${month}-${day}`;
+        const isSelected = selectedDate === dateKey;
+
+        return (
+          <button
+            key={dateKey}
+            className={`py-4 text-[#2D2D2D] text-sm text-center ${
+              isSelected ? "bg-[#1E2382] text-white" : "bg-white"
+            } border border-gray-300 cursor-pointer`}
+            onClick={() => handleSelectDate(dateKey)}
+          >
+            {day}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -178,12 +219,17 @@ function BookingSummary() {
       <button className="w-full bg-[#1E2382] text-white font-semibold capitalize p-4 rounded-2xl active:scale-95 duration-200 cursor-pointer">
         request booking payment from parent
       </button>
+      <p className="mt-4 px-6 text-center text-gray-400">
+        By booking, you agree to our{" "}
+        <Link className="text-[#00A9C1]">terms</Link> and cancellation{" "}
+        <Link className="text-[#00A9C1]">policy</Link>
+      </p>
     </article>
   );
 }
 
 function BookingTimeFrames() {
-  const timeFrames = [9, 10, 11, 12, 1, 2, 3, 4, 5];
+  const timeFrames = generateTimeSlots();
   return (
     <div className="border border-[#E2E8F0] p-4 rounded-2xl mt-8">
       <h2 className="text-[#2D2D2D] text-2xl font-semibold mb-4">
@@ -191,8 +237,11 @@ function BookingTimeFrames() {
       </h2>
       <article className="grid grid-cols-3 gap-6">
         {timeFrames.map((time) => (
-          <button className="p-4 border border-[#E2E8F0] rounded-xl" key={time}>
-            {time}:PM
+          <button
+            className="p-4 border border-[#E2E8F0] rounded-xl cursor-pointer"
+            key={time}
+          >
+            {time}
           </button>
         ))}
       </article>

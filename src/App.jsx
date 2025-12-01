@@ -32,6 +32,7 @@ import FAQs from "./pages/FAQs";
 import MyLearning from "./pages/Student/MyLearning";
 import BookingSection from "./pages/Student/BookingSection";
 import DashboardLayout from "./pages/Student/DashboardLayout";
+import CourseDetails from "./pages/Student/CourseDetails";
 
 export default function App() {
   return (
@@ -79,6 +80,7 @@ export default function App() {
           }
         >
           <Route index element={<DashBoard />} />
+          <Route path="course-details" element={<CourseDetails />} />
           <Route path="my-learning" element={<MyLearning />} />
           <Route path="booking-section" element={<BookingSection />} />
         </Route>

@@ -70,31 +70,10 @@ export default function MyLearning() {
             </div>
           </div>
           {/*  the recommended cards*/}
-          <div>
-            <article className="grid grid-cols-1 grid-rows-2 w-[380px] h-[450px] rounded-xl shadow overflow-hidden">
-              <figure>
-                <img src={CourseImage} className="w-full h-full" />
-              </figure>
-              <div className="flex flex-col p-4">
-                <h3 className="text-[#FF6839] capitalize mb-2">Exam prep</h3>
-                <h4 className="tex-xl capitalize text-[#2D2D2D] font-semibold mb-2">
-                  preparing for science based JAMB/UTME exams.
-                </h4>
-                <div className="flex justify-between pb-4 mb-4 border-b border-gray-200">
-                  <p>8weeks</p>
-                  <p>156 students taught</p>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div className="flex gap-2">
-                    <p className="text-[#C5C8C9]">&#8358;100,000</p>
-                    <p className="text-[#00A9C1]">&#8358;52,000</p>
-                  </div>
-                  <button className="bg-[#F1F5F9] text-[#1E2382] text-lg font-medium capitalize border border-[#E2E8F0] px-4 py-2  rounded-xl active:scale-95 duration-100 cursor-pointer">
-                    view more
-                  </button>
-                </div>
-              </div>
-            </article>
+          <div className="grid grid-flow-col gap-4 auto-cols-max py-2 overflow-x-hidden">
+            <RecommendedCourse />
+            <RecommendedCourse />
+            <RecommendedCourse />
           </div>
         </section>
       </main>
@@ -153,6 +132,37 @@ function CompletedCourse({ course }) {
       <button className="bg-[#00A9C1] w-full mt-4 p-3 text-[#E6F6F9] rounded-lg cursor-pointer">
         Class Completed
       </button>
+    </article>
+  );
+}
+
+function RecommendedCourseSection() {}
+
+function RecommendedCourse() {
+  return (
+    <article className="grid grid-cols-1 grid-rows-2 w-[360px] h-[450px] rounded-xl shadow overflow-hidden">
+      <figure>
+        <img src={CourseImage} className="w-full h-full" />
+      </figure>
+      <div className="flex flex-col p-4">
+        <h3 className="text-[#FF6839] capitalize mb-2">Exam prep</h3>
+        <h4 className="tex-xl capitalize text-[#2D2D2D] font-semibold mb-2">
+          preparing for science based JAMB/UTME exams.
+        </h4>
+        <div className="flex justify-between pb-4 mb-4 border-b border-gray-200">
+          <p>8weeks</p>
+          <p>156 students taught</p>
+        </div>
+        <div className="flex justify-between items-center">
+          <div className="flex gap-2">
+            <p className="text-[#C5C8C9]">&#8358;100,000</p>
+            <p className="text-[#00A9C1]">&#8358;52,000</p>
+          </div>
+          <button className="bg-[#F1F5F9] text-[#1E2382] text-lg font-medium capitalize border border-[#E2E8F0] px-4 py-2  rounded-xl active:scale-95 duration-100 cursor-pointer">
+            view more
+          </button>
+        </div>
+      </div>
     </article>
   );
 }
