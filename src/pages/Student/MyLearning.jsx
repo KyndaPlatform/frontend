@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import StudentNavbar from "../../components/StudentNavbar";
 import Footer from "../../components/Footer";
 import LaptopImg from "../../../public/images/laptop.png";
@@ -139,6 +140,7 @@ function CompletedCourse({ course }) {
 function RecommendedCourseSection() {}
 
 function RecommendedCourse() {
+  const navigate = useNavigate();
   return (
     <article className="grid grid-cols-1 grid-rows-2 w-[360px] h-[450px] rounded-xl shadow overflow-hidden">
       <figure>
@@ -158,7 +160,10 @@ function RecommendedCourse() {
             <p className="text-[#C5C8C9]">&#8358;100,000</p>
             <p className="text-[#00A9C1]">&#8358;52,000</p>
           </div>
-          <button className="bg-[#F1F5F9] text-[#1E2382] text-lg font-medium capitalize border border-[#E2E8F0] px-4 py-2  rounded-xl active:scale-95 duration-100 cursor-pointer">
+          <button
+            className="bg-[#F1F5F9] text-[#1E2382] text-lg font-medium capitalize border border-[#E2E8F0] px-4 py-2  rounded-xl active:scale-95 duration-100 cursor-pointer"
+            onClick={() => navigate("/dashboard/course-details")}
+          >
             view more
           </button>
         </div>

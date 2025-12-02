@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Clock4,
@@ -19,6 +19,10 @@ import BookingImg from "../../../public/images/booktutor.jpg";
 import profileImg from "../../../public/images/tutor.png";
 
 export default function CourseDetails() {
+  useEffect(() => {
+    window.scrollTo(0, 0); // scroll to top when component mounts
+  }, []);
+
   return (
     <>
       <section className="bg-[#0B0C2E]">
