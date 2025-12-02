@@ -98,6 +98,13 @@ const Navbar = () => {
     { icon: Wallet, label: "Wallet", href: "wallet" },
   ];
 
+  // const navLinks = [
+  //   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard', active: true },
+  //   { icon: BookOpen, label: 'My Learning', href: '#' },
+  //   { icon: Grid3x3, label: 'My Sections', href: '#' },
+  //   { icon: Wallet, label: 'Wallet', href: '#' }
+  // ];
+
   return (
     <>
       <nav className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3">

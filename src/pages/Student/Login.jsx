@@ -1,10 +1,10 @@
+// src/components/Login.jsx - COMPLETE CORRECTED VERSION
+
 import React, { useState } from "react";
 import { Eye, EyeOff, CheckCircle, XCircle } from "lucide-react";
 import { useAuth } from "../../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
-import EmailVerificationModal from "../EmailVerificationModal";
 
-// Toast Component
 const Toast = ({ message, type, onClose }) => {
   React.useEffect(() => {
     const timer = setTimeout(onClose, 3000);
@@ -36,14 +36,12 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState(null);
   const [errors, setErrors] = useState({});
-  const [showVerificationModal, setShowVerificationModal] = useState(false);
-  const [verificationEmail, setVerificationEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const showToast = (message, type) => {
     setToast({ message, type });
   };
 
-  // Validate form
   const validateForm = () => {
     const newErrors = {};
 
@@ -61,7 +59,6 @@ export default function Login() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle Input Changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -69,7 +66,6 @@ export default function Login() {
       [name]: value
     }));
     
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -78,7 +74,6 @@ export default function Login() {
     }
   };
 
-  // Handle Login Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -87,30 +82,36 @@ export default function Login() {
       return;
     }
 
+    if (isSubmitting || loading) {
+      console.log("Already submitting...");
+      return;
+    }
+
+    setIsSubmitting(true);
+    console.log("🚀 Starting login process...");
+
     try {
+      console.log("📧 Email:", formData.email);
+      
       const response = await login({
-        email: formData.email,
+        email: formData.email.trim(),
         password: formData.password
       });
 
-      // Check if user data indicates email is verified
-      const userData = response?.user || JSON.parse(localStorage.getItem('kynda_user') || '{}');
-      
-      // If email is already verified, proceed to dashboard
-      if (userData.isEmailVerified) {
+      console.log("✅ Login response:", response);
+
+      // Check if login was successful (including bypassed verification)
+      if (response) {
         showToast("Login successful! Redirecting...", "success");
         setTimeout(() => {
           navigate("/dashboard");
         }, 1500);
       } else {
-        // Email not verified, show modal
-        showToast("Please verify your email to continue", "error");
-        setVerificationEmail(formData.email);
-        setShowVerificationModal(true);
+        throw new Error("Login failed with no response");
       }
       
     } catch (err) {
-      console.error("Login failed:", err);
+      console.error("❌ Login failed:", err);
       
       const errorMessage = 
         err?.message ||
@@ -119,39 +120,23 @@ export default function Login() {
         err?.response?.data?.error ||
         "Invalid credentials. Please try again.";
 
-      // Check if error is specifically about email verification
-      if (errorMessage.toLowerCase().includes("email not verified") || 
-          errorMessage.toLowerCase().includes("not verified")) {
-        setVerificationEmail(formData.email);
-        setShowVerificationModal(true);
-        showToast("Please verify your email to continue", "error");
-        return;
-      }
+      console.error("Error message:", errorMessage);
 
       setErrors({ submit: errorMessage });
       showToast(errorMessage, "error");
+    } finally {
+      setIsSubmitting(false);
+      console.log("🏁 Login process completed");
     }
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === "Enter" && !loading) {
+    if (e.key === "Enter" && !loading && !isSubmitting) {
       handleSubmit(e);
     }
   };
 
-  // Handle successful verification
-  const handleVerificationSuccess = async () => {
-    showToast("Email verified! Logging you in...", "success");
-    
-    // Update user data to mark email as verified
-    const userData = JSON.parse(localStorage.getItem('kynda_user') || '{}');
-    userData.isEmailVerified = true;
-    localStorage.setItem('kynda_user', JSON.stringify(userData));
-    
-    setTimeout(() => {
-      navigate("/dashboard");
-    }, 1500);
-  };
+  const isLoading = loading || isSubmitting;
 
   return (
     <>
@@ -163,19 +148,11 @@ export default function Login() {
         />
       )}
 
-      {/* Email Verification Modal */}
-      <EmailVerificationModal
-        isOpen={showVerificationModal}
-        onClose={() => setShowVerificationModal(false)}
-        email={verificationEmail}
-        onSuccess={handleVerificationSuccess}
-      />
-
       <div className="min-h-screen flex">
         {/* Left Side */}
         <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-blue-900 to-indigo-900">
           <img
-            src="../images/boy3.png"
+            src="/images/boy3.png"
             alt="Student"
             className="absolute inset-0 w-full h-full object-cover opacity-70"
           />
@@ -183,7 +160,7 @@ export default function Login() {
           <div className="relative z-10 p-12 flex flex-col justify-between">
             <div className="flex items-center gap-3">
               <img
-                src="../images/Vector (1).png"
+                src="/images/Vector (1).png"
                 alt="Logo"
                 className="w-12 h-12"
               />
@@ -237,7 +214,6 @@ export default function Login() {
               </div>
 
               <form onSubmit={handleSubmit}>
-                {/* Email Field */}
                 <div className="mb-4">
                   <label className="block text-gray-700 text-sm font-medium mb-2">
                     Email <span className="text-red-500">*</span>
@@ -252,14 +228,13 @@ export default function Login() {
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition ${
                       errors.email ? "border-red-500" : "border-gray-300"
                     }`}
-                    disabled={loading}
+                    disabled={isLoading}
                   />
                   {errors.email && (
                     <p className="text-red-500 text-xs mt-1">{errors.email}</p>
                   )}
                 </div>
 
-                {/* Password Field */}
                 <div className="mb-6">
                   <label className="block text-gray-700 text-sm font-medium mb-2">
                     Password <span className="text-red-500">*</span>
@@ -275,13 +250,13 @@ export default function Login() {
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition pr-10 ${
                         errors.password ? "border-red-500" : "border-gray-300"
                       }`}
-                      disabled={loading}
+                      disabled={isLoading}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                      disabled={loading}
+                      disabled={isLoading}
                     >
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
@@ -291,23 +266,21 @@ export default function Login() {
                   )}
                 </div>
 
-                {/* Forgot Password Link */}
                 <div className="mb-6 text-right">
                   <a
-                    href="/forgot-password"
+                    href="/forget-password"
                     className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                   >
                     Forgot Password?
                   </a>
                 </div>
 
-                {/* Submit Button */}
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={isLoading}
                   className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-semibold py-3 rounded-lg hover:from-blue-700 hover:to-indigo-800 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? (
+                  {isLoading ? (
                     <span className="flex items-center justify-center gap-2">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       Logging in...
@@ -318,14 +291,12 @@ export default function Login() {
                 </button>
               </form>
 
-              {/* Submit Error Display */}
               {errors.submit && (
                 <div className="mt-4 p-3 bg-red-50 text-red-600 border border-red-200 rounded-lg text-sm">
                   {errors.submit}
                 </div>
               )}
 
-              {/* Sign Up Link */}
               <div className="text-center mt-6">
                 <p className="text-sm text-gray-600">
                   Don't have an Account?{" "}

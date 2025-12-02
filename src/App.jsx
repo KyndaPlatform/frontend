@@ -1,4 +1,3 @@
-// src/App.js
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthContext";
 import Onboarding from "./pages/Onboarding";
@@ -29,11 +28,21 @@ import TutorPolicy from "./pages/Tutor/TutorPolicy";
 import TutorResources from "./pages/Tutor/TutorResources";
 import EmailVerificationModal from "./pages/EmailVerificationModal";
 import FAQs from "./pages/FAQs";
+
+// Student pages
 import MyLearning from "./pages/Student/MyLearning";
 import BookingSection from "./pages/Student/BookingSection";
 import DashboardLayout from "./pages/Student/DashboardLayout";
 import CourseDetails from "./pages/Student/CourseDetails";
 import BookedCourses from "./pages/Student/BookedCourses";
+
+// Tutor pages
+import TutorChat from "./pages/Tutor/TutorChat";
+import TutorCourses from "./pages/Tutor/TutorCourses";
+import TutorEarning from "./pages/Tutor/TutorEarning";
+import TutorReport from "./pages/Tutor/TutorReport";
+import TutorSection from "./pages/Tutor/TutorSection";
+import TutorResource1 from "./pages/Tutor/TutorResource1";
 
 export default function App() {
   return (
@@ -66,12 +75,7 @@ export default function App() {
         <Route path="/verify-email" element={<EmailVerificationModal />} />
         <Route path="/faqs" element={<FAQs />} />
 
-        {/* added this route just for testing */}
-
-        {/* Protected Routes - Require Authentication */}
-
-        {/* Add more protected routes here */}
-
+        {/* Protected Student Routes */}
         <Route
           path="/dashboard"
           element={
@@ -87,6 +91,7 @@ export default function App() {
           <Route path="courses" element={<BookedCourses />} />
         </Route>
 
+        {/* Protected Tutor Routes */}
         <Route
           path="/tutor-dashboard"
           element={
@@ -95,6 +100,12 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/tutor-chat" element={<TutorChat />} />
+        <Route path="/tutor-courses" element={<TutorCourses />} />
+        <Route path="/tutor-earning" element={<TutorEarning />} />
+        <Route path="/tutor-report" element={<TutorReport />} />
+        <Route path="/tutor-section" element={<TutorSection />} />
+        <Route path="/tutor-resource1" element={<TutorResource1 />} />
       </Routes>
     </AuthProvider>
   );

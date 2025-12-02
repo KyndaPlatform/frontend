@@ -5,7 +5,7 @@ import { useAuth } from "../../auth/AuthContext";
 
 export default function StudentSignUp() {
   const navigate = useNavigate();
-  const { signUp, loading } = useAuth();
+  const { signUp, sendVerificationCode, loading } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -23,22 +23,18 @@ export default function StudentSignUp() {
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState("");
 
-  // Debounce timer ref
   const debounceTimerRef = useRef(null);
   const isProcessingRef = useRef(false);
 
-  // Handle Input Changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    // Clear errors when user types
     if (errors[e.target.name]) {
       setErrors({ ...errors, [e.target.name]: "" });
     }
     if (apiError) setApiError("");
   };
 
-  // Enhanced Validation
-  const validate = () => {
+  const validate = useCallback(() => {
     const newErrors = {};
 
     if (!formData.firstName.trim()) newErrors.firstName = "First name required";
@@ -66,33 +62,27 @@ export default function StudentSignUp() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [formData]);
 
-  // Submit Signup - WITH DEBOUNCE
   const handleGetStarted = useCallback(async (e) => {
     e.preventDefault();
     
-    // Prevent multiple rapid submissions
     if (isProcessingRef.current || isSubmitting) {
       console.log("⏸️ Request already in progress, ignoring...");
       return;
     }
 
-    // Clear any existing debounce timer
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
 
-    // Validate form first
     if (!validate()) {
       return;
     }
 
-    // Set processing flags
     isProcessingRef.current = true;
     setIsSubmitting(true);
 
-    // Debounce the actual API call by 500ms
     debounceTimerRef.current = setTimeout(async () => {
       try {
         console.log("🚀 Starting signup process...");
@@ -108,14 +98,13 @@ export default function StudentSignUp() {
 
         console.log("🎉 Signup successful, full response:", result);
         
-        // Check if we have a student ID
         const studentId = result.studentId || localStorage.getItem('kynda_student_id');
         console.log("🎓 Student ID:", studentId);
         
         if (studentId) {
-          console.log("✅ Student ID found, navigating to enrollment...");
+          console.log("✅ Student ID found, sending verification code...");
           
-          // Store all necessary data for enrollment
+          // Store signup data
           localStorage.setItem('kynda_signup_data', JSON.stringify({
             studentId: studentId,
             email: formData.email,
@@ -124,7 +113,16 @@ export default function StudentSignUp() {
             phone: formData.phone
           }));
           
-          // Navigate after a brief delay to show success
+          try {
+            // Send verification code using tutor endpoint
+            await sendVerificationCode(formData.email);
+            console.log("✅ Verification code sent");
+          } catch (verifyError) {
+            console.warn("⚠️ Failed to send verification code:", verifyError);
+            // Continue anyway - user can resend later
+          }
+          
+          // TEMPORARY: Skip verification and go directly to enrollment
           setTimeout(() => {
             navigate("/enrollment-details1");
           }, 500);
@@ -145,11 +143,10 @@ export default function StudentSignUp() {
         isProcessingRef.current = false;
         setIsSubmitting(false);
       }
-    }, 500); // 500ms debounce delay
+    }, 500);
 
-  }, [formData, signUp, navigate, isSubmitting]);
+  }, [formData, signUp, sendVerificationCode, navigate, isSubmitting, validate]);
 
-  // Cleanup debounce timer on unmount
   React.useEffect(() => {
     return () => {
       if (debounceTimerRef.current) {
@@ -162,13 +159,12 @@ export default function StudentSignUp() {
     console.log("Google signup coming soon...");
   };
 
-  // Combined loading state
   const isLoading = loading || isSubmitting;
 
   return (
     <div className="min-h-screen flex">
       {/* LEFT SIDE (Hero Section) */}
-      <div className="hidden lg:flex lg:w-1/2 bg-[url('../images/boy2.png')] bg-cover bg-center opacity-80 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-[url('/images/boy2.png')] bg-cover bg-center opacity-80 relative overflow-hidden">
         <div className="absolute top-10 left-10 text-white/20 text-6xl">
           <Atom size={60} className="animate-pulse" />
         </div>
@@ -182,7 +178,7 @@ export default function StudentSignUp() {
         <div className="flex flex-col justify-between p-12 z-10 w-full">
           <div className="flex items-center gap-2">
             <img
-              src="../images/Vector (1).png"
+              src="/images/Vector (1).png"
               alt="Kynda Logo"
               className="w-10 h-10"
             />
@@ -203,12 +199,11 @@ export default function StudentSignUp() {
 
       {/* RIGHT SIDE (Signup Form) */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50">
-        <div className="w-full max-w-2xl">
+        <div className="w-full max-w-2xl ">
           <div className="bg-white rounded-2xl shadow-xl p-8">
-            {/* Logo for mobile */}
             <div className="lg:hidden flex items-center justify-center gap-2 mb-6">
               <img
-                src="../images/Vector (1).png"
+                src="/images/Vector (1).png"
                 alt="Kynda Logo"
                 className="w-10 h-10"
               />
@@ -222,16 +217,13 @@ export default function StudentSignUp() {
               <p className="text-gray-600">Join Kynda to start learning today</p>
             </div>
 
-            {/* API Error Display */}
             {apiError && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                 {apiError}
               </div>
             )}
 
-            {/* Form - Wrapped in form element for better accessibility */}
-            <form onSubmit={handleGetStarted} className="space-y-4">
-              {/* Name Fields */}
+            <form onSubmit={handleGetStarted} className="space-y-4 space-x-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -269,7 +261,6 @@ export default function StudentSignUp() {
                 </div>
               </div>
 
-              {/* Email and Phone */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -295,7 +286,7 @@ export default function StudentSignUp() {
                   <div className="flex gap-2">
                     <select 
                       disabled={isLoading}
-                      className="px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-1 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <option>🇺🇸 +1</option>
                       <option>🇳🇬 +234</option>
@@ -308,7 +299,7 @@ export default function StudentSignUp() {
                       onChange={handleChange}
                       placeholder="808 765 4321"
                       disabled={isLoading}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                   {errors.phone && (
@@ -317,7 +308,6 @@ export default function StudentSignUp() {
                 </div>
               </div>
 
-              {/* Password */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Password <span className="text-red-500">*</span>
@@ -346,7 +336,6 @@ export default function StudentSignUp() {
                 )}
               </div>
 
-              {/* Confirm Password */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Confirm Password <span className="text-red-500">*</span>
@@ -375,7 +364,6 @@ export default function StudentSignUp() {
                 )}
               </div>
 
-              {/* SIGN UP BUTTON - WITH DEBOUNCE */}
               <button
                 type="submit"
                 disabled={isLoading}
