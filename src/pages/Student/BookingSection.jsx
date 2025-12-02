@@ -127,7 +127,10 @@ export default function BookingSection() {
         </div>
 
         {/* the booking time frame goes here */}
-        <BookingTimeFrames />
+        <BookingTimeFrames
+          selectedDate={selectedDate}
+          onSelectTime={(t) => console.log(t)}
+        />
       </div>
 
       <div className="col-span-1 md:col-span-3 xl:col-start-4 xl:col-end-6">
@@ -159,6 +162,7 @@ function CalendarWeekdays({ currentDate, handleSelectDate, selectedDate }) {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth() + 1;
 
+  const today = new Date();
   const emptyBoxes = Array(firstDayOfMonth).fill("");
 
   return (
@@ -169,18 +173,30 @@ function CalendarWeekdays({ currentDate, handleSelectDate, selectedDate }) {
           className="py-4 text-[#2D2D2D] text-sm text-center"
         />
       ))}
+
       {Array.from({ length: totalDaysInMonth }, (_, i) => {
         const day = i + 1;
         const dateKey = `${year}-${month}-${day}`;
         const isSelected = selectedDate === dateKey;
 
+        // Disable if the date is in the past
+        const dateObj = new Date(year, month - 1, day);
+        const isPast =
+          dateObj <
+          new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
         return (
           <button
             key={dateKey}
-            className={`py-4 text-[#2D2D2D] text-sm text-center ${
-              isSelected ? "bg-[#1E2382] text-white" : "bg-white"
-            } border border-gray-300 cursor-pointer`}
-            onClick={() => handleSelectDate(dateKey)}
+            className={`py-4 text-sm text-center border border-gray-300 cursor-pointer ${
+              isSelected
+                ? "bg-[#1E2382] text-white"
+                : isPast
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-white text-[#2D2D2D]"
+            }`}
+            onClick={() => !isPast && handleSelectDate(dateKey)}
+            disabled={isPast}
           >
             {day}
           </button>
@@ -228,22 +244,77 @@ function BookingSummary() {
   );
 }
 
-function BookingTimeFrames() {
+// function BookingTimeFrames() {
+//   const timeFrames = generateTimeSlots();
+//   return (
+//     <div className="border border-[#E2E8F0] p-4 rounded-2xl mt-8">
+//       <h2 className="text-[#2D2D2D] text-2xl font-semibold mb-4">
+//         Pick Daily Class Time
+//       </h2>
+//       <article className="grid grid-cols-3 gap-6">
+//         {timeFrames.map((time) => (
+//           <button
+//             className="p-4 border border-[#E2E8F0] rounded-xl cursor-pointer"
+//             key={time}
+//           >
+//             {time}
+//           </button>
+//         ))}
+//       </article>
+//     </div>
+//   );
+// }
+
+function BookingTimeFrames({ selectedDate, onSelectTime }) {
+  const [selectedTime, setSelectedTime] = useState(null);
   const timeFrames = generateTimeSlots();
+
+  const today = new Date();
+  const selected = selectedDate ? new Date(selectedDate) : new Date(); // fallback to today
+
+  const isToday =
+    today.getFullYear() === selected.getFullYear() &&
+    today.getMonth() === selected.getMonth() &&
+    today.getDate() === selected.getDate();
+
+  const handleTimeClick = (time) => {
+    setSelectedTime(time);
+    if (onSelectTime) onSelectTime(time);
+  };
+
   return (
     <div className="border border-[#E2E8F0] p-4 rounded-2xl mt-8">
       <h2 className="text-[#2D2D2D] text-2xl font-semibold mb-4">
         Pick Daily Class Time
       </h2>
       <article className="grid grid-cols-3 gap-6">
-        {timeFrames.map((time) => (
-          <button
-            className="p-4 border border-[#E2E8F0] rounded-xl cursor-pointer"
-            key={time}
-          >
-            {time}
-          </button>
-        ))}
+        {timeFrames.map((time) => {
+          const [hour, minute] = time.split(":").map(Number);
+
+          const isPast =
+            isToday &&
+            (hour < today.getHours() ||
+              (hour === today.getHours() && minute <= today.getMinutes()));
+
+          const isSelected = selectedTime === time;
+
+          return (
+            <button
+              key={time}
+              onClick={() => !isPast && handleTimeClick(time)}
+              disabled={isPast}
+              className={`p-4 border rounded-xl cursor-pointer ${
+                isPast
+                  ? "border-gray-300 bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : isSelected
+                  ? "border-[#1E2382] bg-[#1E2382] text-white"
+                  : "border-[#E2E8F0] bg-white text-[#2D2D2D]"
+              }`}
+            >
+              {time}
+            </button>
+          );
+        })}
       </article>
     </div>
   );
