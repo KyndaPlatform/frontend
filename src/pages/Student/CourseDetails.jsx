@@ -14,6 +14,7 @@ import {
 import { MdVerified } from "react-icons/md";
 import { IoMdLock } from "react-icons/io";
 import { FaStar, FaRegStar } from "react-icons/fa";
+import { BsReply } from "react-icons/bs";
 import BookingImg from "../../../public/images/booktutor.jpg";
 import profileImg from "../../../public/images/tutor.png";
 
@@ -336,13 +337,19 @@ function TabsItemReviews() {
       </div>
 
       {/* all the ratings by the various individuals for the course */}
-      <div className="flex flex-col gap-2 border-b border-gray-300 pb-6">
+      <div className="flex flex-col gap-2 border-b border-gray-300 pt-6 pb-6">
         <Ratings rating={5} percentage={90} />
         <Ratings rating={4} percentage={5} />
         <Ratings rating={3} percentage={2} />
         <Ratings rating={2} percentage={2} />
         <Ratings rating={1} percentage={1} />
       </div>
+
+      {/* the comments section for the review items */}
+      <Comments />
+      <Comments />
+      <Comments />
+      <Comments />
     </article>
   );
 }
@@ -375,5 +382,38 @@ function Ratings({ rating = 0, percentage = 0 }) {
         ></div>
       </div>
     </div>
+  );
+}
+
+function Comments() {
+  return (
+    <article className="flex gap-2 py-4 border-b border-gray-200">
+      {/* user profile image */}
+      <figure className="w-[50px] h-[50px] bg-orange-300 rounded-full shrink-0"></figure>
+      {/* comment details goes here */}
+      <div className="flex flex-col">
+        <header className="flex justify-between">
+          <div className="flex gap-2">
+            <p className="text-lg">Emeka Nwosu</p>
+            <p className="inline-flex gap-1">
+              4.5 <FaStar color="#FFA726" size={18} />
+            </p>
+          </div>
+
+          {/* the date of the comment */}
+          <time className="text-sm">March 15, 2025</time>
+        </header>
+
+        {/* The main comment goes here */}
+        <p className="text-[#344256] text-sm leading-normal my-1">
+          This tutor is amazing! He explained algebra and motion in such a
+          simple way that I finally understood. My grades have already improved
+        </p>
+        <button className="cursor-pointer text-sm flex inline-flex gap-2 w-max p-1">
+          <BsReply color="#FFA726" size={18} />
+          Reply
+        </button>
+      </div>
+    </article>
   );
 }

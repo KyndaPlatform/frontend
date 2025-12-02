@@ -33,6 +33,7 @@ import MyLearning from "./pages/Student/MyLearning";
 import BookingSection from "./pages/Student/BookingSection";
 import DashboardLayout from "./pages/Student/DashboardLayout";
 import CourseDetails from "./pages/Student/CourseDetails";
+import BookedCourses from "./pages/Student/BookedCourses";
 
 export default function App() {
   return (
@@ -83,6 +84,7 @@ export default function App() {
           <Route path="course-details" element={<CourseDetails />} />
           <Route path="my-learning" element={<MyLearning />} />
           <Route path="booking-section" element={<BookingSection />} />
+          <Route path="courses" element={<BookedCourses />} />
         </Route>
 
         <Route

@@ -217,7 +217,7 @@ function BookingSummary() {
         <span className="text-[#00A9C1] font-bold">&#8358;52,000</span>
       </div>
       <button className="w-full bg-[#1E2382] text-white font-semibold capitalize p-4 rounded-2xl active:scale-95 duration-200 cursor-pointer">
-        request booking payment from parent
+        Book Course
       </button>
       <p className="mt-4 px-6 text-center text-gray-400">
         By booking, you agree to our{" "}
