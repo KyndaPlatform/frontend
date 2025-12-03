@@ -26,7 +26,7 @@ export default function CourseDetails() {
   return (
     <>
       <section className="bg-[#0B0C2E]">
-        <div className="max-w-screen-2xl mx-auto px-4 py-8 grid grid-cols-2">
+        <div className="max-w-screen-2xl mx-auto px-4 py-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <h1 className="text-white text-4xl">
               The ultimate guide to the best wordpress LMS Plugin
@@ -51,7 +51,7 @@ export default function CourseDetails() {
               </p>
             </div>
 
-            <div className="flex gap-4 mt-6">
+            <div className="flex gap-4 mt-6 text-sm font-semibold">
               <button className="bg-[#00A9C1] py-2 px-4 text-white rounded-lg active:scale-95 duration-200 cursor-pointer">
                 Mathematics
               </button>
@@ -393,12 +393,12 @@ function Comments() {
   return (
     <article className="flex gap-2 py-4 border-b border-gray-200">
       {/* user profile image */}
-      <figure className="w-[50px] h-[50px] bg-orange-300 rounded-full shrink-0"></figure>
+      <figure className="w-[40px] h-[40px] bg-orange-300 rounded-full shrink-0"></figure>
       {/* comment details goes here */}
       <div className="flex flex-col">
         <header className="flex justify-between">
           <div className="flex gap-2">
-            <p className="text-lg">Emeka Nwosu</p>
+            <p className="text-base">Emeka Nwosu</p>
             <p className="inline-flex gap-1">
               4.5 <FaStar color="#FFA726" size={18} />
             </p>
