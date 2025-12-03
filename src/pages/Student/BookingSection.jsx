@@ -15,6 +15,7 @@ import {
   formatDate,
   formatTime,
 } from "../../utils/timeUtils";
+import Spinner from "../../components/Spinner";
 
 const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS_SHORT = [
@@ -34,13 +35,11 @@ const MONTHS_SHORT = [
 
 export default function BookingSection() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  // const [selectedDate, setSelectedDate] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState({
     date: null,
     time: null,
   });
-
-  console.log(selectedDate);
 
   const monthIndex = currentDate.getMonth(); // 0–11
   const year = currentDate.getFullYear();
@@ -75,6 +74,20 @@ export default function BookingSection() {
       ...prevState, // Keep the existing date property
       time: timekey,
     }));
+  };
+
+  const handleBooking = () => {
+    if (!selectedDate?.date || !selectedDate?.time) return; // extra guard
+
+    setIsLoading(true); // start loading
+    console.log("Booking data:", selectedDate);
+
+    // Simulate 3-second booking process
+    setTimeout(() => {
+      setIsLoading(false); // stop loading
+      setSelectedDate({ date: null, time: null }); // reset selection
+      console.log("Booking completed!");
+    }, 3000);
   };
 
   return (
@@ -156,7 +169,12 @@ export default function BookingSection() {
         <h1 className="text-[#0B0C2E] text-2xl lg:text-4xl font-semibold mb-10">
           See All Bookings
         </h1>
-        <BookingSummary bookingDate={selectedDate} />
+        <BookingSummary
+          bookingDate={selectedDate}
+          onBook={handleBooking}
+          isLoading={isLoading}
+        />
+        <Link to="/dashboard/courses">see all bookings</Link>
       </div>
     </section>
   );
@@ -225,8 +243,8 @@ function CalendarWeekdays({ currentDate, handleSelectDate, selectedDate }) {
   );
 }
 
-function BookingSummary({ bookingDate }) {
-  const isDisabled = !bookingDate?.date || !bookingDate?.time;
+function BookingSummary({ bookingDate, onBook, isLoading }) {
+  const isDisabled = !bookingDate?.date || !bookingDate?.time || isLoading;
 
   return (
     <article className="p-6 border border-[#E4E4E7] rounded-2xl">
@@ -273,8 +291,9 @@ function BookingSummary({ bookingDate }) {
         : "cursor-pointer active:scale-95"
     }
   `}
+        onClick={onBook}
       >
-        Book Course
+        {isLoading ? <Spinner /> : "Book Course"}
       </button>
 
       <p className="mt-4 px-6 text-center text-gray-400">
