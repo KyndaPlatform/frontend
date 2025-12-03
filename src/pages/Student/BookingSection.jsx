@@ -10,7 +10,11 @@ import {
   getDaysInMonth,
   canGoToPreviousMonth,
 } from "../../utils/calendarUtils";
-import { generateTimeSlots } from "../../utils/timeUtils";
+import {
+  generateTimeSlots,
+  formatDate,
+  formatTime,
+} from "../../utils/timeUtils";
 
 const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS_SHORT = [
@@ -30,7 +34,13 @@ const MONTHS_SHORT = [
 
 export default function BookingSection() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(null);
+  // const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDate, setSelectedDate] = useState({
+    date: null,
+    time: null,
+  });
+
+  console.log(selectedDate);
 
   const monthIndex = currentDate.getMonth(); // 0–11
   const year = currentDate.getFullYear();
@@ -54,8 +64,17 @@ export default function BookingSection() {
   };
 
   const selectDateHandler = (dateKey) => {
-    setSelectedDate(dateKey);
-    console.log("Selected date:", dateKey);
+    setSelectedDate((prevState) => ({
+      ...prevState, // Keep the existing time property
+      date: dateKey,
+    }));
+  };
+
+  const selectTimeHandler = (timekey) => {
+    setSelectedDate((prevState) => ({
+      ...prevState, // Keep the existing date property
+      time: timekey,
+    }));
   };
 
   return (
@@ -129,7 +148,7 @@ export default function BookingSection() {
         {/* the booking time frame goes here */}
         <BookingTimeFrames
           selectedDate={selectedDate}
-          onSelectTime={(t) => console.log(t)}
+          onSelectTime={selectTimeHandler}
         />
       </div>
 
@@ -137,7 +156,7 @@ export default function BookingSection() {
         <h1 className="text-[#0B0C2E] text-2xl lg:text-4xl font-semibold mb-10">
           See All Bookings
         </h1>
-        <BookingSummary />
+        <BookingSummary bookingDate={selectedDate} />
       </div>
     </section>
   );
@@ -177,7 +196,7 @@ function CalendarWeekdays({ currentDate, handleSelectDate, selectedDate }) {
       {Array.from({ length: totalDaysInMonth }, (_, i) => {
         const day = i + 1;
         const dateKey = `${year}-${month}-${day}`;
-        const isSelected = selectedDate === dateKey;
+        const isSelected = selectedDate.date === dateKey;
 
         // Disable if the date is in the past
         const dateObj = new Date(year, month - 1, day);
@@ -206,7 +225,9 @@ function CalendarWeekdays({ currentDate, handleSelectDate, selectedDate }) {
   );
 }
 
-function BookingSummary() {
+function BookingSummary({ bookingDate }) {
+  const isDisabled = !bookingDate?.date || !bookingDate?.time;
+
   return (
     <article className="p-6 border border-[#E4E4E7] rounded-2xl">
       <h2 className="font-semibold text-lg border-b-2 border-[#E4E4E7] pb-4 mb-6">
@@ -222,19 +243,40 @@ function BookingSummary() {
       </div>
       <div className="flex justify-between my-4">
         <p className="text-[#858C95]">Start Date:</p>
-        <p className="text-[#374758] font-semibold">June-18-2025</p>
+        <p className="text-[#374758] font-semibold">
+          {bookingDate?.date
+            ? formatDate(bookingDate.date)
+            : "No date selected"}
+        </p>
       </div>
       <div className="flex justify-between my-4">
         <p className="text-[#858C95]">Time:</p>
-        <p className="text-[#374758] font-semibold">4:PM</p>
+        <p className="text-[#374758] font-semibold">
+          {bookingDate?.time
+            ? formatTime(bookingDate.time)
+            : "No time selected"}
+        </p>
       </div>
       <div className="flex justify-between border-t-2 border-[#E4E4E7] py-6">
         <p className="text-[#00010E] font-bold">Total</p>
         <span className="text-[#00A9C1] font-bold">&#8358;52,000</span>
       </div>
-      <button className="w-full bg-[#1E2382] text-white font-semibold capitalize p-4 rounded-2xl active:scale-95 duration-200 cursor-pointer">
+      {/* <button className="w-full bg-[#1E2382] text-white font-semibold capitalize p-4 rounded-2xl active:scale-95 duration-200 cursor-pointer">
+        Book Course
+      </button> */}
+      <button
+        disabled={isDisabled}
+        className={`w-full bg-[#1E2382] text-white font-semibold capitalize p-4 rounded-2xl duration-200
+    ${
+      isDisabled
+        ? "opacity-50 cursor-not-allowed active:scale-100"
+        : "cursor-pointer active:scale-95"
+    }
+  `}
+      >
         Book Course
       </button>
+
       <p className="mt-4 px-6 text-center text-gray-400">
         By booking, you agree to our{" "}
         <Link className="text-[#00A9C1]">terms</Link> and cancellation{" "}
@@ -244,22 +286,56 @@ function BookingSummary() {
   );
 }
 
-// function BookingTimeFrames() {
+// function BookingTimeFrames({ selectedDate, onSelectTime }) {
+//   const [selectedTime, setSelectedTime] = useState(null);
 //   const timeFrames = generateTimeSlots();
+
+//   const today = new Date();
+//   const selected = selectedDate.date ? new Date(selectedDate.date) : new Date(); // fallback to today
+
+//   const isToday =
+//     today.getFullYear() === selected.getFullYear() &&
+//     today.getMonth() === selected.getMonth() &&
+//     today.getDate() === selected.getDate();
+
+//   const handleTimeClick = (time) => {
+//     setSelectedTime(time);
+//     if (onSelectTime) onSelectTime(time);
+//   };
+
 //   return (
 //     <div className="border border-[#E2E8F0] p-4 rounded-2xl mt-8">
 //       <h2 className="text-[#2D2D2D] text-2xl font-semibold mb-4">
 //         Pick Daily Class Time
 //       </h2>
 //       <article className="grid grid-cols-3 gap-6">
-//         {timeFrames.map((time) => (
-//           <button
-//             className="p-4 border border-[#E2E8F0] rounded-xl cursor-pointer"
-//             key={time}
-//           >
-//             {time}
-//           </button>
-//         ))}
+//         {timeFrames.map((time) => {
+//           const [hour, minute] = time.split(":").map(Number);
+
+//           const isPast =
+//             isToday &&
+//             (hour < today.getHours() ||
+//               (hour === today.getHours() && minute <= today.getMinutes()));
+
+//           const isSelected = selectedTime === time;
+
+//           return (
+//             <button
+//               key={time}
+//               onClick={() => !isPast && handleTimeClick(time)}
+//               disabled={isPast}
+//               className={`p-4 border rounded-xl cursor-pointer ${
+//                 isPast
+//                   ? "border-gray-300 bg-gray-200 text-gray-400 cursor-not-allowed"
+//                   : isSelected
+//                   ? "border-[#1E2382] bg-[#1E2382] text-white"
+//                   : "border-[#E2E8F0] bg-white text-[#2D2D2D]"
+//               }`}
+//             >
+//               {time}
+//             </button>
+//           );
+//         })}
 //       </article>
 //     </div>
 //   );
@@ -267,10 +343,10 @@ function BookingSummary() {
 
 function BookingTimeFrames({ selectedDate, onSelectTime }) {
   const [selectedTime, setSelectedTime] = useState(null);
-  const timeFrames = generateTimeSlots();
+  const timeFrames = generateTimeSlots(); // now returns { label, time24 }
 
   const today = new Date();
-  const selected = selectedDate ? new Date(selectedDate) : new Date(); // fallback to today
+  const selected = selectedDate?.date ? new Date(selectedDate.date) : today;
 
   const isToday =
     today.getFullYear() === selected.getFullYear() &&
@@ -287,21 +363,23 @@ function BookingTimeFrames({ selectedDate, onSelectTime }) {
       <h2 className="text-[#2D2D2D] text-2xl font-semibold mb-4">
         Pick Daily Class Time
       </h2>
+
       <article className="grid grid-cols-3 gap-6">
-        {timeFrames.map((time) => {
-          const [hour, minute] = time.split(":").map(Number);
+        {timeFrames.map(({ label, time24 }) => {
+          // extract time for comparison
+          const [hour, minute] = time24.split(":").map(Number);
 
           const isPast =
             isToday &&
             (hour < today.getHours() ||
-              (hour === today.getHours() && minute <= today.getMinutes()));
+              (hour === today.getHours() && minute < today.getMinutes()));
 
-          const isSelected = selectedTime === time;
+          const isSelected = selectedTime === time24;
 
           return (
             <button
-              key={time}
-              onClick={() => !isPast && handleTimeClick(time)}
+              key={time24}
+              onClick={() => !isPast && handleTimeClick(time24)}
               disabled={isPast}
               className={`p-4 border rounded-xl cursor-pointer ${
                 isPast
@@ -311,7 +389,7 @@ function BookingTimeFrames({ selectedDate, onSelectTime }) {
                   : "border-[#E2E8F0] bg-white text-[#2D2D2D]"
               }`}
             >
-              {time}
+              {label}
             </button>
           );
         })}
