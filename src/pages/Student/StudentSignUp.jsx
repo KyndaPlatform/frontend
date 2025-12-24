@@ -164,7 +164,7 @@ export default function StudentSignUp() {
   return (
     <div className="min-h-screen flex">
       {/* LEFT SIDE (Hero Section) */}
-      <div className="hidden lg:flex lg:w-1/2 bg-[url('../images/boy2.png')] bg-cover bg-center opacity-80 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-[url('/images/boy2.png')] bg-cover bg-center opacity-80 relative overflow-hidden">
         <div className="absolute top-10 left-10 text-white/20 text-6xl">
           <Atom size={60} className="animate-pulse" />
         </div>
@@ -178,7 +178,7 @@ export default function StudentSignUp() {
         <div className="flex flex-col justify-between p-12 z-10 w-full">
           <div className="flex items-center gap-2">
             <img
-              src="../../../public/images/Vector (1).png"
+              src="/images/Vector (1).png"
               alt="Kynda Logo"
               className="w-10 h-10"
             />
@@ -199,11 +199,11 @@ export default function StudentSignUp() {
 
       {/* RIGHT SIDE (Signup Form) */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50">
-        <div className="w-full max-w-2xl">
+        <div className="w-full max-w-2xl ">
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <div className="lg:hidden flex items-center justify-center gap-2 mb-6">
               <img
-                src="../../.../public/images/Vector (1).png"
+                src="/images/Vector (1).png"
                 alt="Kynda Logo"
                 className="w-10 h-10"
               />
@@ -223,7 +223,7 @@ export default function StudentSignUp() {
               </div>
             )}
 
-            <form onSubmit={handleGetStarted} className="space-y-4">
+            <form onSubmit={handleGetStarted} className="space-y-4 space-x-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -286,7 +286,7 @@ export default function StudentSignUp() {
                   <div className="flex gap-2">
                     <select 
                       disabled={isLoading}
-                      className="px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-1 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <option>🇺🇸 +1</option>
                       <option>🇳🇬 +234</option>
@@ -299,7 +299,7 @@ export default function StudentSignUp() {
                       onChange={handleChange}
                       placeholder="808 765 4321"
                       disabled={isLoading}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                   {errors.phone && (

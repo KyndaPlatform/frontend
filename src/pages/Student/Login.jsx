@@ -152,7 +152,7 @@ export default function Login() {
         {/* Left Side */}
         <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-blue-900 to-indigo-900">
           <img
-            src="../../../public/images/boy3.png"
+            src="/images/boy3.png"
             alt="Student"
             className="absolute inset-0 w-full h-full object-cover opacity-70"
           />
@@ -160,7 +160,7 @@ export default function Login() {
           <div className="relative z-10 p-12 flex flex-col justify-between">
             <div className="flex items-center gap-3">
               <img
-                src="../../../public/images/Vector (1).png"
+                src="/images/Vector (1).png"
                 alt="Logo"
                 className="w-12 h-12"
               />
@@ -268,7 +268,7 @@ export default function Login() {
 
                 <div className="mb-6 text-right">
                   <a
-                    href="/forgot-password"
+                    href="/forget-password"
                     className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                   >
                     Forgot Password?
