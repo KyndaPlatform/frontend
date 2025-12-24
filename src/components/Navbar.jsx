@@ -179,8 +179,8 @@ const Navbar = () => {
         <div className="h-full overflow-y-auto px-4 py-6 space-y-1">
           {[
             { name: 'Home', path: '/' },
-            { name: 'About Us', path: '/about-us' },
-            { name: 'How it Works', path: '/howitworks' },
+            { name: 'About Us', path: '/about' },
+            { name: 'How it Works', path: '/how-it-works' },
             { name: 'Features', path: '/features' },
             { name: 'Contact Us', path: '/contact' },
             { name: 'Teach on Kynda', path: '/teach-on-kynda' }

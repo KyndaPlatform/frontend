@@ -21,7 +21,8 @@ export const useAuth = () => {
 
 // Provider component
 export const AuthProvider = ({ children }) => {
-  const API_BASE = import.meta.env?.VITE_API_BASE_URL || "https://kynda-backend.onrender.com";
+  // const API_BASE = import.meta.env?.VITE_API_BASE_URL || "https://kynda-backend.onrender.com";
+  const API_BASE = import.meta.env?.VITE_API_BASE_URL || "http://localhost:5000"
 
   const [token, setToken] = useState(() => 
     localStorage.getItem("kynda_token")
