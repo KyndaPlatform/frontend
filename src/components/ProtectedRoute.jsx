@@ -7,6 +7,8 @@ const ProtectedRoute = ({ children }) => {
   const { token, user, loading } = useAuth(); // Changed from isAuthenticated, isLoading
 
   // TEMPORARY: Disable protection in development
+
+  
   const DEV_MODE = true;
 
   if (DEV_MODE) {

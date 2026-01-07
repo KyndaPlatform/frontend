@@ -51,7 +51,7 @@ const Footer = () => {
                   className="text-cyan-400 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110"
                 />
                 <span className="group-hover:text-white transition-colors duration-300">
-                  Emergency Line: +1-800-SKY-HELP
+                  Emergency Line: +1-800-KYNDA-HELP
                 </span>
               </div>
               <div className="flex items-center space-x-2 text-lg group cursor-pointer">
