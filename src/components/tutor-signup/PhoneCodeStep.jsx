@@ -8,7 +8,7 @@ const PhoneCodeStep = ({ formData, updateFormData }) => (
       <Check className="w-8 h-8 text-white" />
     </div>
     <div>
-      <h3 className="text-xl font-semibold text-gray-800">Phone Number Verified</h3>
+      <h3 className="text-xl font-semibold text-gray-800">Email Verified</h3>
       <p className="text-sm text-gray-600 mt-2">
         You have successfully verified your email address. Proceed to complete your application
       </p>
