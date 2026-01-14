@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, MapPin, CheckCircle, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, CheckCircle, ArrowRight, Wallet } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
-import EmailVerificationModal from "./EmailVerificationModal";
 
 export default function EnrollmentDetails1() {
   const navigate = useNavigate();
-  const { submitEnrollment, signupPage2, loading, user } = useAuth();
+  const { signupPage2, loading } = useAuth();
 
   const [formData, setFormData] = useState({
     schoolLevel: "",
@@ -17,29 +16,35 @@ export default function EnrollmentDetails1() {
     struggles: "",
   });
 
-  const [studentId, setStudentId] = useState("");
-  const [userEmail, setUserEmail] = useState("");
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [signupData] = useState(() => {
+    const storedData = localStorage.getItem('kynda_signup_data');
+    
+    if (storedData) {
+      try {
+        const parsedData = JSON.parse(storedData);
+        console.log("📥 Enrollment page - Signup data:", parsedData);
+        return parsedData;
+      } catch (error) {
+        console.error("Failed to parse signup data:", error);
+        return null;
+      }
+    }
+    return null;
+  });
+
+  const [showFinalModal, setShowFinalModal] = useState(false);
   const [showSchoolDropdown, setShowSchoolDropdown] = useState(false);
   const [showLessonDropdown, setShowLessonDropdown] = useState(false);
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Get student ID and email from localStorage on component mount
   useEffect(() => {
-    const signupData = localStorage.getItem('kynda_signup_data');
-    
-    if (signupData) {
-      const parsedData = JSON.parse(signupData);
-      console.log("📥 Enrollment page - Signup data:", parsedData);
-      setStudentId(parsedData.studentId);
-      setUserEmail(parsedData.email || user?.email || "");
-    } else {
+    if (signupData === null) {
       console.warn("No signup data found, redirecting to signup");
       navigate("/signup");
     }
-  }, [navigate, user]);
+  }, [signupData, navigate]);
 
   const schoolLevels = ["Primary", "Secondary", "Exam Prep", "Tertiary"];
   const lessonTypes = ["Quick Help", "Structured Tutoring", "Exam Prep"];
@@ -60,16 +65,19 @@ export default function EnrollmentDetails1() {
   const handleNextClick = async () => {
     if (!validateForm()) return;
 
-    try {
-      if (!studentId) {
-        setApiError("Student ID not found. Please start over.");
-        return;
-      }
+    if (!signupData?.studentId) {
+      setApiError("Student ID not found. Please start over.");
+      return;
+    }
 
-      console.log("🚀 Submitting enrollment for student:", studentId);
+    setIsSubmitting(true);
+    setApiError("");
+
+    try {
+      console.log("🚀 Submitting enrollment for student:", signupData.studentId);
       
       const enrollmentData = {
-        studentId: studentId,
+        studentId: signupData.studentId,
         schoolLevel: formData.schoolLevel,
         Age: formData.age,
         subjects: formData.subjects,
@@ -78,35 +86,32 @@ export default function EnrollmentDetails1() {
         struggles: formData.struggles,
       };
 
-      console.log("📦 Enrollment data:", enrollmentData);
-
-      // Submit enrollment
       const result = await signupPage2(enrollmentData);
       console.log("✅ Enrollment successful:", result);
       
-      // Close success modal and open verification modal
-      setShowSuccessModal(false);
-      setShowVerificationModal(true);
+      // Update user as verified after successful enrollment
+      const userData = JSON.parse(localStorage.getItem('kynda_user') || '{}');
+      userData.isEmailVerified = true;
+      localStorage.setItem('kynda_user', JSON.stringify(userData));
+      
+      setShowFinalModal(true);
       
     } catch (error) {
-      console.error("❌ Error saving enrollment:", error);
+      console.error("❌ Error:", error);
       setApiError(error?.message || "Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleVerificationSuccess = () => {
-    console.log("✅ Email verified successfully");
-    
-    // Clean up temporary data
+  const handleGoToDashboard = () => {
     localStorage.removeItem('kynda_signup_data');
-    
-    // Mark email as verified in user data
-    const userData = JSON.parse(localStorage.getItem('kynda_user') || '{}');
-    userData.isEmailVerified = true;
-    localStorage.setItem('kynda_user', JSON.stringify(userData));
-    
-    // Navigate to dashboard
     navigate("/dashboard");
+  };
+
+  const handleCreateWallet = () => {
+    localStorage.removeItem('kynda_signup_data');
+    navigate("/create-wallet");
   };
 
   const updateFormData = (field, value) => {
@@ -116,16 +121,75 @@ export default function EnrollmentDetails1() {
     }
     if (apiError) setApiError("");
   };
+
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setShowSchoolDropdown(false);
+      setShowLessonDropdown(false);
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
+
+  if (!signupData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const isLoading = loading || isSubmitting;
   
   return (
     <div className="min-h-screen flex relative">
-      {/* Email Verification Modal */}
-      <EmailVerificationModal
-        isOpen={showVerificationModal}
-        onClose={() => setShowVerificationModal(false)}
-        email={userEmail}
-        onSuccess={handleVerificationSuccess}
-      />
+      {showFinalModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-green-600" />
+              </div>
+              
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                Setup Complete!
+              </h2>
+              
+              <p className="text-gray-600 mb-6">
+                Your account has been created successfully. What would you like to do next?
+              </p>
+              
+              <div className="space-y-3">
+                <button
+                  onClick={handleGoToDashboard}
+                  className="w-full flex items-center justify-center gap-3 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <ArrowRight size={20} />
+                  Go to Dashboard
+                </button>
+                
+                <button
+                  onClick={handleCreateWallet}
+                  className="w-full flex items-center justify-center gap-3 border border-blue-600 text-blue-600 py-3 px-6 rounded-lg hover:bg-blue-50 transition-colors"
+                >
+                  <Wallet size={20} />
+                  Create Wallet
+                </button>
+              </div>
+              
+              <p className="text-sm text-gray-500 mt-4">
+                You can create your wallet now or later from the dashboard.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Left Section */}
       <div className="hidden lg:flex lg:w-1/2 bg-[url('../images/boy2.png')] bg-cover bg-center opacity-80 relative overflow-hidden">
@@ -156,7 +220,6 @@ export default function EnrollmentDetails1() {
               <p className="text-gray-600 text-sm">Help us understand your learning preferences</p>
             </div>
 
-            {/* API Error Display */}
             {apiError && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                 {apiError}
@@ -164,7 +227,6 @@ export default function EnrollmentDetails1() {
             )}
 
             <div className="space-y-4">
-              {/* School Level */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="relative">
                   <label className="block text-gray-700 text-sm font-medium mb-2">
@@ -173,10 +235,14 @@ export default function EnrollmentDetails1() {
 
                   <button
                     type="button"
-                    onClick={() => setShowSchoolDropdown(!showSchoolDropdown)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowSchoolDropdown(!showSchoolDropdown);
+                    }}
                     className={`w-full px-4 py-3 border ${
                       errors.schoolLevel ? "border-red-500" : "border-gray-300"
-                    } rounded-lg text-left flex items-center justify-between`}
+                    } rounded-lg text-left flex items-center justify-between ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={isLoading}
                   >
                     <span className={formData.schoolLevel ? "text-gray-900" : "text-gray-500"}>
                       {formData.schoolLevel || "Select"}
@@ -212,7 +278,6 @@ export default function EnrollmentDetails1() {
                   )}
                 </div>
 
-                {/* Age */}
                 <div>
                   <label className="block text-gray-700 text-sm font-medium mb-2">
                     Age *
@@ -224,15 +289,15 @@ export default function EnrollmentDetails1() {
                     placeholder="Minimum of 16"
                     className={`w-full px-4 py-3 border ${
                       errors.age ? "border-red-500" : "border-gray-300"
-                    } rounded-lg`}
+                    } rounded-lg ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                     min="16"
                     max="100"
+                    disabled={isLoading}
                   />
                   {errors.age && <p className="text-red-500 text-xs mt-1">{errors.age}</p>}
                 </div>
               </div>
 
-              {/* Subjects */}
               <div>
                 <label className="block text-gray-700 text-sm font-medium mb-2">
                   Subjects *
@@ -244,12 +309,12 @@ export default function EnrollmentDetails1() {
                   placeholder="Math, English, Physics..."
                   className={`w-full px-4 py-3 border ${
                     errors.subjects ? "border-red-500" : "border-gray-300"
-                  } rounded-lg`}
+                  } rounded-lg ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={isLoading}
                 />
                 {errors.subjects && <p className="text-red-500 text-xs mt-1">{errors.subjects}</p>}
               </div>
 
-              {/* Lesson Type */}
               <div className="relative">
                 <label className="block text-gray-700 text-sm font-medium mb-2">
                   Preferred Lesson Type
@@ -257,8 +322,12 @@ export default function EnrollmentDetails1() {
 
                 <button
                   type="button"
-                  onClick={() => setShowLessonDropdown(!showLessonDropdown)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-left flex items-center justify-between"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowLessonDropdown(!showLessonDropdown);
+                  }}
+                  className={`w-full px-4 py-3 border border-gray-300 rounded-lg text-left flex items-center justify-between ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={isLoading}
                 >
                   <span className={formData.lessonType ? "text-gray-900" : "text-gray-500"}>
                     {formData.lessonType || "Select"}
@@ -290,7 +359,6 @@ export default function EnrollmentDetails1() {
                 )}
               </div>
 
-              {/* Location */}
               <div>
                 <label className="block text-gray-700 text-sm font-medium mb-2">
                   Location *
@@ -303,14 +371,14 @@ export default function EnrollmentDetails1() {
                     placeholder="Your location"
                     className={`w-full px-4 py-3 pr-10 border ${
                       errors.location ? "border-red-500" : "border-gray-300"
-                    } rounded-lg`}
+                    } rounded-lg ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={isLoading}
                   />
                   <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 </div>
                 {errors.location && <p className="text-red-500 text-xs mt-1">{errors.location}</p>}
               </div>
 
-              {/* Struggles */}
               <div>
                 <label className="block text-gray-700 text-sm font-medium mb-2">
                   Your Struggles
@@ -320,17 +388,18 @@ export default function EnrollmentDetails1() {
                   onChange={(e) => updateFormData("struggles", e.target.value)}
                   placeholder="Explain any struggles you have in learning"
                   rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none"
+                  className={`w-full px-4 py-3 border border-gray-300 rounded-lg resize-none ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={isLoading}
                 />
               </div>
             </div>
 
-            {/* Buttons */}
             <div className="flex justify-between mt-8">
               <button
                 type="button"
                 onClick={() => navigate("/signup")}
-                className="flex items-center gap-2 px-6 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                disabled={isLoading}
+                className="flex items-center gap-2 px-6 py-3 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ChevronLeft size={20} />
                 Previous
@@ -339,11 +408,20 @@ export default function EnrollmentDetails1() {
               <button
                 type="button"
                 onClick={handleNextClick}
-                disabled={loading}
+                disabled={isLoading}
                 className="flex items-center gap-2 px-8 py-3 bg-blue-700 text-white rounded-lg hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {loading ? "Saving..." : "Next"}
-                <ChevronRight size={20} />
+                {isLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    Next
+                    <ChevronRight size={20} />
+                  </>
+                )}
               </button>
             </div>
           </div>
