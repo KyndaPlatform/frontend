@@ -8,7 +8,7 @@ const AboutYouStep = ({ formData, updateFormData }) => (
 
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">
-        Tell us About You
+        Tell us more About You
       </label>
       <textarea
         placeholder="tell us about you, your professionalism and what makes confidence and trusting to as a tutor"
@@ -21,7 +21,7 @@ const AboutYouStep = ({ formData, updateFormData }) => (
 
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">
-        Tell us About Your Lessons
+        Tell us About Your Lesson
       </label>
       <textarea
         placeholder="convince your future students why they should take lessons with you"

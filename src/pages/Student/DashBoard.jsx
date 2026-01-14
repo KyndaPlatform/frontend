@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import StudentNavbar from "../../components/StudentNavbar";
 import Footer from "../../components/Footer";
 import {
-  Search,
-  Heart,
-  Bookmark,
-  Clock,
-  Star,
-  ChevronLeft,
+  Search, 
+  Heart, 
+  Bookmark, 
+  Clock, 
+  Star, 
+  ChevronLeft, 
   ChevronRight,
   CheckCircle,
   Users,
@@ -17,6 +17,20 @@ import CategoryNav from "./CategoryNav";
 
 const DashBoard = () => {
   // Sample Data
+  const [bookingModal, setBookingModal] = useState({
+    isOpen: false,
+    tutor: null,
+    course: null
+  });
+
+  const handleBookSession = (course) => {
+    setBookingModal({
+      isOpen: true,
+      tutor: course.tutor,
+      course: course
+    });
+  };
+
   const continueLearning = [
     {
       id: "1",
@@ -462,13 +476,23 @@ const DashBoard = () => {
                       </p>
                     </div>
                   </div>
-                  <button className="px-2 py-1 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 bg-blue-700 text-white text-[10px] sm:text-xs lg:text-sm font-medium rounded-lg hover:bg-blue-800 transition-colors whitespace-nowrap ml-1.5 sm:ml-2">
+                  <button
+                    onClick={() => handleBookSession(course)}
+                   className="px-2 py-1 sm:px-3 sm:py-1.5 lg:px-4 lg:py-2 bg-blue-700 text-white text-[10px] sm:text-xs lg:text-sm font-medium rounded-lg hover:bg-blue-800 transition-colors whitespace-nowrap ml-1.5 sm:ml-2">
                     Book Section
                   </button>
                 </div>
               </div>
             </div>
           ))}
+
+          <BookingModal 
+        isOpen={bookingModal.isOpen}
+        onClose={() => setBookingModal({ isOpen: false, tutor: null, course: null })}
+        tutor={bookingModal.tutor}
+        course={bookingModal.course}
+      />
+
         </div>
 
         {/* Load More Button */}
