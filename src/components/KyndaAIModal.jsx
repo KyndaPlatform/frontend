@@ -1,3 +1,10 @@
+
+import React from "react";
+
+export default function KyndaAIModal() {
+  return <div>KyndaAIModal</div>;
+}
+=======
 import React from 'react'
 
 const KyndaAIModal = () => {
@@ -7,3 +14,4 @@ const KyndaAIModal = () => {
 }
 
 export default KyndaAIModal
+

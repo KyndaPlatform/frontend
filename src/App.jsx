@@ -35,6 +35,7 @@ import BookingSection from "./pages/Student/BookingSection";
 import DashboardLayout from "./pages/Student/DashboardLayout";
 import CourseDetails from "./pages/Student/CourseDetails";
 import BookedCourses from "./pages/Student/BookedCourses";
+import StudentWallet from "./pages/Student/StudentWallet";
 
 // Tutor pages
 import TutorChat from "./pages/Tutor/TutorChat";
@@ -89,6 +90,7 @@ export default function App() {
           <Route path="my-learning" element={<MyLearning />} />
           <Route path="booking-section" element={<BookingSection />} />
           <Route path="courses" element={<BookedCourses />} />
+          <Route path="wallet" element={<StudentWallet />} />
         </Route>
 
         {/* Protected Tutor Routes */}
